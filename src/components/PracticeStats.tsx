@@ -4,10 +4,11 @@ interface PracticeStatsProps {
   notesCount: number;
   nextSetName: string | null;
   onStartNextSet: () => void;
+  onRestartSet: () => void;
   onExit: () => void;
 }
 
-export function PracticeStats({ durationSeconds, paltasCount, notesCount, nextSetName, onStartNextSet, onExit }: PracticeStatsProps) {
+export function PracticeStats({ durationSeconds, paltasCount, notesCount, nextSetName, onStartNextSet, onRestartSet, onExit }: PracticeStatsProps) {
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -52,6 +53,18 @@ export function PracticeStats({ durationSeconds, paltasCount, notesCount, nextSe
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <button
+            onClick={onRestartSet}
+            style={{
+              width: '100%', padding: '18px', borderRadius: '16px',
+              backgroundColor: '#10b981', color: '#fff', border: 'none',
+              fontSize: '18px', fontWeight: '900', cursor: 'pointer',
+              boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.4)',
+              textTransform: 'uppercase', letterSpacing: '1px'
+            }}
+          >
+            Practice Again 🔄
+          </button>
           {nextSetName && (
             <button
               onClick={onStartNextSet}

@@ -7,6 +7,7 @@ interface StartPracticeProps {
 
 export function StartPractice({ onStart, onExit }: StartPracticeProps) {
   const [secondsLeft, setSecondsLeft] = useState(5);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   useEffect(() => {
     if (secondsLeft <= 0) {
@@ -24,68 +25,77 @@ export function StartPractice({ onStart, onExit }: StartPracticeProps) {
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
       backgroundColor: '#0f172a', color: '#fff', zIndex: 2500,
       display: 'flex', flexDirection: 'column', alignItems: 'center',
-      justifyContent: 'center', padding: '20px', textAlign: 'center'
+      justifyContent: 'center', padding: '20px', textAlign: 'center',
+      backdropFilter: 'blur(8px)'
     }}>
       <div style={{ 
-        maxWidth: '500px', width: '100%', backgroundColor: '#1e293b', 
-        padding: '40px', borderRadius: '32px', border: '1px solid #334155',
-        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
+        maxWidth: '450px', width: '100%', backgroundColor: '#1e293b', 
+        padding: '40px', borderRadius: '40px', border: '1px solid #334155',
+        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+        position: 'relative'
       }}>
-        <div style={{ fontSize: '64px', marginBottom: '20px' }}>✨</div>
-        <h1 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '10px', color: '#f59e0b' }}>All the Best!</h1>
-        <p style={{ color: '#94a3b8', marginBottom: '32px' }}>Starting in {secondsLeft} seconds...</p>
+        <h1 style={{ fontSize: '36px', fontWeight: '900', marginBottom: '40px', color: '#f59e0b' }}>All the Best!</h1>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '40px', textAlign: 'left' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: '#0f172a', padding: '16px', borderRadius: '16px' }}>
-            <span style={{ fontSize: '24px' }}>🌬️</span>
-            <div>
-              <p style={{ margin: 0, fontWeight: '700', fontSize: '14px' }}>Deep Breathing</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Inhale deeply from your diaphragm before you start.</p>
-            </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '50px' }}>
+          <div style={{ backgroundColor: '#0f172a', padding: '20px', borderRadius: '24px', border: '1px solid #334155' }}>
+            <span style={{ fontSize: '40px', display: 'block', marginBottom: '10px' }}>🌬️</span>
+            <p style={{ margin: 0, fontWeight: '800', fontSize: '14px', color: '#94a3b8' }}>BREATHE</p>
           </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: '#0f172a', padding: '16px', borderRadius: '16px' }}>
-            <span style={{ fontSize: '24px' }}>🧘</span>
-            <div>
-              <p style={{ margin: 0, fontWeight: '700', fontSize: '14px' }}>Relax Shoulders</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Keep your posture upright but shoulders completely loose.</p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: '#0f172a', padding: '16px', borderRadius: '16px' }}>
-            <span style={{ fontSize: '24px' }}>🎤</span>
-            <div>
-              <p style={{ margin: 0, fontWeight: '700', fontSize: '14px' }}>Stay Focused</p>
-              <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>Listen to the Tanpura and find your center.</p>
-            </div>
+          <div style={{ backgroundColor: '#0f172a', padding: '20px', borderRadius: '24px', border: '1px solid #334155' }}>
+            <span style={{ fontSize: '40px', display: 'block', marginBottom: '10px' }}>🧘</span>
+            <p style={{ margin: 0, fontWeight: '800', fontSize: '14px', color: '#94a3b8' }}>RELAX</p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+          <button
+            onClick={onStart}
+            style={{
+              width: '180px', height: '180px', borderRadius: '50%',
+              backgroundColor: '#f59e0b', color: '#fff', border: 'none',
+              fontSize: '24px', fontWeight: '900', cursor: 'pointer',
+              boxShadow: '0 15px 30px -5px rgba(245, 158, 11, 0.4)',
+              display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+              gap: '10px', position: 'relative',
+              transition: 'transform 0.2s'
+            }}
+          >
+            <span style={{ fontSize: '14px', opacity: 0.8 }}>STARTING IN</span>
+            <span style={{ fontSize: '48px' }}>{secondsLeft}</span>
+          </button>
+
           <button
             onClick={onExit}
             style={{
-              flex: 1, padding: '18px', borderRadius: '16px',
-              backgroundColor: 'transparent', color: '#94a3b8', border: '2px solid #334155',
-              fontSize: '16px', fontWeight: '800', cursor: 'pointer'
+              marginTop: '20px', padding: '12px 24px', borderRadius: '100px',
+              backgroundColor: 'transparent', color: '#64748b', border: '1px solid #334155',
+              fontSize: '14px', fontWeight: '800', cursor: 'pointer'
             }}
           >
             CANCEL
           </button>
-          <button
-            onClick={onStart}
-            style={{
-              flex: 2, padding: '18px', borderRadius: '16px',
-              backgroundColor: '#f59e0b', color: '#fff', border: 'none',
-              fontSize: '18px', fontWeight: '900', cursor: 'pointer',
-              boxShadow: '0 10px 15px -3px rgba(245, 158, 11, 0.4)',
-              textTransform: 'uppercase', letterSpacing: '1px'
-            }}
-          >
-            START NOW ({secondsLeft}s)
-          </button>
         </div>
+
+        {isMobile && (
+          <div style={{
+            marginTop: '30px', padding: '12px', borderRadius: '16px',
+            backgroundColor: 'rgba(56, 189, 248, 0.1)', border: '1px dashed #38bdf8',
+            display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center'
+          }}>
+            <span style={{ fontSize: '20px', animation: 'rotateIcon 2s infinite' }}>📱</span>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: '#38bdf8' }}>Rotate for better experience</span>
+          </div>
+        )}
       </div>
+
+      <style>{`
+        @keyframes rotateIcon {
+          0% { transform: rotate(0deg); }
+          25% { transform: rotate(90deg); }
+          75% { transform: rotate(90deg); }
+          100% { transform: rotate(0deg); }
+        }
+      `}</style>
     </div>
   );
 }

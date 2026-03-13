@@ -37,7 +37,7 @@ export class AudioEngine {
     }
   }
 
-  private createHarmoniumNote(frequency: number, startTime: number, duration: number, volume: number) {
+  private createHarmoniumNote(frequency: number, startTime: number, duration: number, volume: number, targetFrequency?: number) {
     if (!this.audioContext) return;
     const ctx = this.audioContext;
     const harmonics = [
@@ -59,7 +59,13 @@ export class AudioEngine {
     harmonics.forEach(({ ratio, amplitude }) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.frequency.value = frequency * ratio;
+      osc.frequency.setValueAtTime(frequency * ratio, startTime);
+      if (targetFrequency) {
+        // Steeper curve: setTargetAtTime provides a more natural quadratic-like approach
+        // We use a small time constant relative to duration
+        const timeConstant = duration * 0.2; 
+        osc.frequency.setTargetAtTime(targetFrequency * ratio, startTime, timeConstant);
+      }
       osc.type = 'sine';
       osc.connect(gain);
       gain.connect(masterGain);
@@ -74,14 +80,18 @@ export class AudioEngine {
     masterGain.gain.linearRampToValueAtTime(0, startTime + duration);
   }
 
-  private createFluteNote(frequency: number, startTime: number, duration: number, volume: number) {
+  private createFluteNote(frequency: number, startTime: number, duration: number, volume: number, targetFrequency?: number) {
     if (!this.audioContext) return;
     const ctx = this.audioContext;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     const filter = ctx.createBiquadFilter();
     osc.type = 'triangle';
-    osc.frequency.value = frequency;
+    osc.frequency.setValueAtTime(frequency, startTime);
+    if (targetFrequency) {
+      const timeConstant = duration * 0.2;
+      osc.frequency.setTargetAtTime(targetFrequency, startTime, timeConstant);
+    }
     const vibrato = ctx.createOscillator();
     const vibratoGain = ctx.createGain();
     vibrato.frequency.value = 5;
@@ -103,16 +113,21 @@ export class AudioEngine {
     osc.stop(startTime + duration + 0.05);
   }
 
-  private createPianoNote(frequency: number, startTime: number, duration: number, volume: number) {
+  private createPianoNote(frequency: number, startTime: number, duration: number, volume: number, targetFrequency?: number) {
     if (!this.audioContext) return;
     const ctx = this.audioContext;
     const osc = ctx.createOscillator();
     const osc2 = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.value = frequency;
+    osc.frequency.setValueAtTime(frequency, startTime);
     osc2.type = 'triangle';
-    osc2.frequency.value = frequency * 2;
+    osc2.frequency.setValueAtTime(frequency * 2, startTime);
+    if (targetFrequency) {
+      const timeConstant = duration * 0.2;
+      osc.frequency.setTargetAtTime(targetFrequency, startTime, timeConstant);
+      osc2.frequency.setTargetAtTime(targetFrequency * 2, startTime, timeConstant);
+    }
     osc.connect(gain);
     osc2.connect(gain);
     gain.connect(ctx.destination);
@@ -125,14 +140,18 @@ export class AudioEngine {
     osc2.stop(startTime + duration);
   }
 
-  private createSynthNote(frequency: number, startTime: number, duration: number, volume: number) {
+  private createSynthNote(frequency: number, startTime: number, duration: number, volume: number, targetFrequency?: number) {
     if (!this.audioContext) return;
     const ctx = this.audioContext;
     const osc = ctx.createOscillator();
     const filter = ctx.createBiquadFilter();
     const gain = ctx.createGain();
     osc.type = 'sawtooth';
-    osc.frequency.value = frequency;
+    osc.frequency.setValueAtTime(frequency, startTime);
+    if (targetFrequency) {
+      const timeConstant = duration * 0.2;
+      osc.frequency.setTargetAtTime(targetFrequency, startTime, timeConstant);
+    }
     filter.type = 'lowpass';
     filter.frequency.setValueAtTime(500, startTime);
     filter.frequency.exponentialRampToValueAtTime(3000, startTime + 0.1);
@@ -254,7 +273,8 @@ export class AudioEngine {
     notes: TaanNote[], 
     tempo: number, 
     groupSize: number = 1,
-    onNoteChange?: (index: number) => void
+    onNoteChange?: (index: number) => void,
+    glide: boolean = false
   ) {
     if (!this.audioContext || this.audioContext.state === 'suspended') {
       await this.initialize();
@@ -270,11 +290,14 @@ export class AudioEngine {
       const now = this.audioContext.currentTime;
       const volume = isGroupStart ? 0.45 : 0.25; 
       const duration = 60 / (this.currentTempo * 2); 
+      
+      const targetFrequency = (glide && i < notes.length - 1) ? notes[i + 1].frequency : undefined;
+
       switch(this.soundType) {
-        case 'flute': this.createFluteNote(note.frequency, now, duration, volume); break;
-        case 'piano': this.createPianoNote(note.frequency, now, duration, volume); break;
-        case 'synth': this.createSynthNote(note.frequency, now, duration, volume); break;
-        default: this.createHarmoniumNote(note.frequency, now, duration, volume);
+        case 'flute': this.createFluteNote(note.frequency, now, duration, volume, targetFrequency); break;
+        case 'piano': this.createPianoNote(note.frequency, now, duration, volume, targetFrequency); break;
+        case 'synth': this.createSynthNote(note.frequency, now, duration, volume, targetFrequency); break;
+        default: this.createHarmoniumNote(note.frequency, now, duration, volume, targetFrequency);
       }
       await new Promise(resolve => setTimeout(resolve, duration * 1000));
     }

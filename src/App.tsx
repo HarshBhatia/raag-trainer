@@ -24,7 +24,7 @@ function App() {
     const saved = thaats.find(r => r.name === savedPrefs.selectedRaagName);
     return saved || thaats[0];
   });
-  const [tempo, setTempo] = useState(savedPrefs.tempo || (savedPrefs.onboarding?.experience === 'beginner' ? 120 : savedPrefs.onboarding?.experience === 'intermediate' ? 150 : 180));
+  const [tempo, setTempo] = useState(savedPrefs.tempo || (savedPrefs.onboarding?.experience === 'beginner' ? 80 : savedPrefs.onboarding?.experience === 'intermediate' ? 120 : 160));
   const [saNote, setSaNote] = useState<NoteName>(savedPrefs.saNote || (savedPrefs.onboarding?.gender === 'male' ? 'C#' : 'G#'));
   const [repetitions, setRepetitions] = useState(savedPrefs.repetitions || 2);
   const [loop] = useState(savedPrefs.loop !== undefined ? savedPrefs.loop : false);
@@ -33,6 +33,7 @@ function App() {
   const [isTanpuraPlaying, setIsTanpuraPlaying] = useState(savedPrefs.isTanpuraPlaying || false);
   const [tanpuraVolume, setTanpuraVolume] = useState(savedPrefs.tanpuraVolume !== undefined ? savedPrefs.tanpuraVolume : 0.4);
   const [selectedCategory, setSelectedCategory] = useState<string>(savedPrefs.selectedCategory || 'All');
+  const [enableGlide, setEnableGlide] = useState(savedPrefs.enableGlide || false);
   const [customPaltas, setCustomPaltas] = useState<Palta[]>(savedPrefs.customPaltas || []);
   const [currentPaltaId, setCurrentPaltaId] = useState(savedPrefs.currentPaltaId || 1);
   
@@ -50,6 +51,9 @@ function App() {
   
   const [playbackMode, setPlaybackMode] = useState<'loop' | 'sequential' | null>(null);
   const isAutoSwitching = useRef(false);
+  const skipRequested = useRef(false);
+  const isStartingNextSet = useRef(false);
+  const currentPlaybackIdRef = useRef(0);
 
   // Stats tracking
   const sessionStartTime = useRef<number | null>(null);
@@ -73,11 +77,12 @@ function App() {
       isTanpuraPlaying,
       tanpuraVolume,
       selectedCategory,
+      enableGlide,
       customPaltas,
       currentPaltaId
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
-  }, [onboarding, selectedThaat, tempo, saNote, repetitions, loop, notation, soundType, isTanpuraPlaying, tanpuraVolume, selectedCategory, customPaltas, currentPaltaId]);
+  }, [onboarding, selectedThaat, tempo, saNote, repetitions, loop, notation, soundType, isTanpuraPlaying, tanpuraVolume, selectedCategory, enableGlide, customPaltas, currentPaltaId]);
 
   const visiblePaltas = useMemo(() => {
     let base = paltas;
@@ -97,7 +102,6 @@ function App() {
   useEffect(() => {
     let timer: number;
     if (isPlaying && playbackMode === 'sequential') {
-      // Initialize immediately to prevent glitch
       const updateTimer = () => {
         const startIdx = visiblePaltas.findIndex(p => p.id === currentPaltaId);
         if (startIdx === -1) return;
@@ -113,18 +117,19 @@ function App() {
           totalSeconds += palta.notes.length * repetitions * noteDuration;
         }
 
-        // Remaining time for current palta
+        // Current palta
         const currentPalta = visiblePaltas[startIdx];
-        const remainingReps = Math.max(0, repetitions - currentRepetition);
+        if (introBeat > 0) {
+          totalSeconds += (4 - introBeat + 1) * (60 / tempo);
+          totalSeconds += repetitions * currentPalta.notes.length * noteDuration;
+        } else {
+          const remainingReps = Math.max(0, repetitions - currentRepetition);
+          const notesLeftInRep = Math.max(0, currentPalta.notes.length - (currentNoteIndex + 1));
+          totalSeconds += notesLeftInRep * noteDuration;
+          totalSeconds += remainingReps * currentPalta.notes.length * noteDuration;
+        }
         
-        // Time left in the current repetition
-        const notesLeftInRep = Math.max(0, currentPalta.notes.length - (currentNoteIndex + 1));
-        totalSeconds += notesLeftInRep * noteDuration;
-        
-        // Time for remaining full repetitions
-        totalSeconds += remainingReps * currentPalta.notes.length * noteDuration;
-        
-        setDynamicTimeRemaining(Math.max(0, totalSeconds));
+        setDynamicTimeRemaining(Math.max(0, Math.ceil(totalSeconds)));
       };
 
       updateTimer();
@@ -133,7 +138,7 @@ function App() {
       setDynamicTimeRemaining(0);
     }
     return () => clearInterval(timer);
-  }, [isPlaying, playbackMode, visiblePaltas, currentPaltaId, currentNoteIndex, currentRepetition, repetitions, tempo]);
+  }, [isPlaying, playbackMode, visiblePaltas, currentPaltaId, currentNoteIndex, currentRepetition, repetitions, tempo, introBeat]);
 
   const categories = useMemo(() => {
     const cats = new Set(paltas.map(p => p.category || 'Other'));
@@ -156,7 +161,14 @@ function App() {
       setCurrentPaltaId(allPaltas[0].id);
     }
     setCurrentNoteIndex(-1);
-  }, [selectedThaat, saNote, customPaltas.length]);
+
+    if (isStartingNextSet.current) {
+      isStartingNextSet.current = false;
+      setTimeout(() => {
+        handlePlaySequential(true);
+      }, 150);
+    }
+  }, [selectedThaat, saNote, customPaltas.length, selectedCategory]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -220,15 +232,17 @@ function App() {
     }
 
     audioEngine.start();
-    const playbackIdAtStart = playbackId + 1;
-    setPlaybackId(playbackIdAtStart);
+    const playbackId = ++currentPlaybackIdRef.current;
 
     let startIndex = startFromCurrent ? visiblePaltas.findIndex(p => p.id === currentPaltaId) : 0;
     if (startIndex === -1) startIndex = 0;
 
     for (let paltaIndex = startIndex; paltaIndex < visiblePaltas.length; paltaIndex++) {
-      if (!audioEngine.getIsPlaying()) break;
+      if (playbackId !== currentPlaybackIdRef.current) break;
       const palta = visiblePaltas[paltaIndex];
+      
+      // RESET SKIP FLAG AT START OF EACH NEW PALTA
+      skipRequested.current = false;
       
       setCurrentPaltaId(palta.id);
       setCurrentRepetition(0);
@@ -236,25 +250,41 @@ function App() {
       
       const groupSize = getGroupSize(palta.pattern);
       
-      await audioEngine.playIntro(tempo, setIntroBeat);
-      if (!audioEngine.getIsPlaying()) break;
+      await audioEngine.playIntro(tempo, (beat) => {
+        if (playbackId === currentPlaybackIdRef.current && !skipRequested.current) {
+          setIntroBeat(beat);
+        }
+      });
+
+      if (playbackId !== currentPlaybackIdRef.current) break;
+      
+      // If skip was pressed during intro, skipRequested is now true, loop will continue
+      if (skipRequested.current) {
+        continue;
+      }
       
       for (let rep = 0; rep < repetitions; rep++) {
-        if (!audioEngine.getIsPlaying()) break;
+        if (playbackId !== currentPlaybackIdRef.current || skipRequested.current) break;
         setCurrentRepetition(rep + 1);
         await audioEngine.playTaan(palta.notes, tempo, groupSize, (index) => {
-          setCurrentNoteIndex(index);
-          if (index !== -1) totalNotesPlayed.current += 1;
-        });
+          if (playbackId === currentPlaybackIdRef.current && !skipRequested.current) {
+            setCurrentNoteIndex(index);
+            if (index !== -1) totalNotesPlayed.current += 1;
+          }
+        }, enableGlide);
       }
       
-      if (audioEngine.getIsPlaying()) {
-        completedPaltasCount.current += 1;
+      if (playbackId !== currentPlaybackIdRef.current) break;
+
+      if (skipRequested.current) {
+        continue;
       }
+
+      completedPaltasCount.current += 1;
     }
     
-    // Check if we finished the loop naturally (reached the end)
-    if (audioEngine.getIsPlaying()) {
+    // Check if we finished naturally
+    if (playbackId === currentPlaybackIdRef.current) {
       if (loop) {
         handlePlaySequential(false);
       } else {
@@ -285,12 +315,14 @@ function App() {
     await audioEngine.playIntro(tempo, setIntroBeat);
     if (!audioEngine.getIsPlaying()) return;
     const runLoop = async (currentRep: number) => {
-      if (!audioEngine.getIsPlaying()) return;
+      if (!audioEngine.getIsPlaying() || currentPlaybackIdRef.current !== currentId) return;
       setCurrentRepetition(((currentRep - 1) % repetitions) + 1);
       await audioEngine.playTaan(selectedPalta.notes, tempo, groupSize, (index) => {
-        setCurrentNoteIndex(index);
-      });
-      if (audioEngine.getIsPlaying()) {
+        if (currentPlaybackIdRef.current === currentId) {
+          setCurrentNoteIndex(index);
+        }
+      }, enableGlide);
+      if (audioEngine.getIsPlaying() && currentPlaybackIdRef.current === currentId) {
         runLoop(currentRep + 1);
       }
     };
@@ -298,6 +330,8 @@ function App() {
   };
 
   const handleStop = () => {
+    currentPlaybackIdRef.current++;
+    skipRequested.current = false;
     isAutoSwitching.current = false;
     audioEngine.stop();
     setIsPlaying(false);
@@ -345,7 +379,9 @@ function App() {
 
   const handleSkip = () => {
     if (playbackMode === 'sequential') {
-      audioEngine.stop(); // This will break the current palta loop in handlePlaySequential
+      skipRequested.current = true;
+      audioEngine.stop(); // Breaks current playTaan/playIntro
+      audioEngine.start(); // Restart engine state so loop condition remains true
     } else {
       handleStop();
     }
@@ -362,24 +398,19 @@ function App() {
   const handleStartNextSet = () => {
     const nextSet = getNextSetName();
     if (nextSet) {
+      isStartingNextSet.current = true;
       setSelectedCategory(nextSet);
       setShowStats(false);
-      // Wait for paltas to update based on new category
-      setTimeout(() => {
-        const firstPalta = paltas.find(p => p.category === nextSet || nextSet === 'All');
-        if (firstPalta) {
-          setCurrentPaltaId(firstPalta.id);
-        }
-        setIsPracticeMode(true);
-        handlePlaySequential(true);
-      }, 50);
+      setIsPracticeMode(true);
+      
+      // The palta state update effect will now trigger handlePlaySequential
     }
   };
 
   const handleOnboardingComplete = (prefs: UserPrefs) => {
     setOnboarding(prefs);
     setSaNote(prefs.gender === 'male' ? 'C#' : 'G#');
-    setTempo(prefs.experience === 'beginner' ? 120 : prefs.experience === 'intermediate' ? 150 : 180);
+    setTempo(prefs.experience === 'beginner' ? 80 : prefs.experience === 'intermediate' ? 120 : 160);
   };
 
   if (!onboarding) {
@@ -446,7 +477,7 @@ function App() {
           padding: 24px;
         }
         .hero-button {
-          background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
           color: #fff;
           border: none;
           border-radius: 24px;
@@ -454,7 +485,7 @@ function App() {
           font-size: 32px;
           font-weight: 900;
           cursor: pointer;
-          box-shadow: 0 20px 40px -10px rgba(245, 158, 11, 0.5);
+          box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.5);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -465,7 +496,7 @@ function App() {
         }
         .hero-button:hover {
           transform: translateY(-4px);
-          box-shadow: 0 25px 50px -12px rgba(245, 158, 11, 0.6);
+          box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.6);
         }
       `}</style>
 
@@ -476,6 +507,16 @@ function App() {
           notesCount={finalStats.notes}
           nextSetName={getNextSetName()}
           onStartNextSet={handleStartNextSet}
+          onRestartSet={() => {
+            setShowStats(false);
+            if (visiblePaltas.length > 0) {
+              setCurrentPaltaId(visiblePaltas[0].id);
+            }
+            setIsPracticeMode(true);
+            setTimeout(() => {
+              handlePlaySequential(true);
+            }, 100);
+          }}
           onExit={() => setShowStats(false)}
         />
       )}
@@ -505,6 +546,7 @@ function App() {
           totalRepetitions={repetitions}
           thaatName={selectedThaat.name}
           saNote={saNote}
+          category={selectedCategory}
           timeRemaining={dynamicTimeRemaining}
           onRestart={handleRestartPractice}
           onSkip={handleSkip}
@@ -516,23 +558,6 @@ function App() {
           }}
         />
       )}
-
-      <header style={{
-        marginBottom: '24px',
-        padding: '16px 20px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}>
-        <div style={{ 
-          background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-          width: '40px', height: '40px', borderRadius: '12px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '20px', boxShadow: '0 8px 12px -3px rgba(99, 102, 241, 0.3)',
-          color: '#fff',
-          fontWeight: '900'
-        }}>R</div>
-      </header>
 
       <div className="main-layout" style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
         <aside className="sidebar" style={{ 
@@ -609,6 +634,12 @@ function App() {
             onTanpuraToggle={() => setIsTanpuraPlaying(!isTanpuraPlaying)}
             tanpuraVolume={tanpuraVolume}
             onTanpuraVolumeChange={setTanpuraVolume}
+            enableGlide={enableGlide}
+            onEnableGlideChange={setEnableGlide}
+            onResetToDefaults={() => {
+              localStorage.removeItem(STORAGE_KEY);
+              window.location.reload();
+            }}
             customPattern={customPattern}
             onCustomPatternChange={setCustomPattern}
             onAddCustomPalta={handleAddCustomPalta}

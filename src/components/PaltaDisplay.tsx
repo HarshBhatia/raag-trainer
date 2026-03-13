@@ -34,7 +34,16 @@ export function PaltaDisplay({ paltas, currentPaltaId, currentNoteIndex, onSelec
     }
   }, [currentPaltaId]);
 
-  const getGroupSize = (pattern: string) => {
+  const getGroupSize = (palta: Palta) => {
+    const pattern = palta.pattern;
+    if (pattern.includes('Merukhand')) {
+      const match = pattern.match(/(\d+) notes/);
+      return match ? parseInt(match[1]) : 3;
+    }
+    if (pattern === 'Building Pyramid') return 1;
+    if (pattern === 'Expanding Intervals') return 2;
+    if (pattern === 'High Note Anchor') return 2;
+
     if (pattern.includes('Custom')) {
       const match = pattern.match(/\(([^)]+)\)/);
       if (match) {
@@ -51,8 +60,50 @@ export function PaltaDisplay({ paltas, currentPaltaId, currentNoteIndex, onSelec
   const getGroupedNotes = (palta: Palta) => {
     const groups: Array<Array<{ swara: Swara; octave: number; index: number }>> = [];
     const notes = palta.notes;
-    const groupSize = getGroupSize(palta.pattern);
+    const groupSize = getGroupSize(palta);
     
+    if (palta.pattern === 'Building Pyramid') {
+      let currentOffset = 0;
+      const scaleLength = 8;
+      for (let i = 1; i <= scaleLength; i++) {
+        const phraseLen = i + (i - 1);
+        const group = [];
+        for (let j = 0; j < phraseLen && currentOffset + j < notes.length; j++) {
+          group.push({ swara: notes[currentOffset + j].swara, octave: notes[currentOffset + j].octave, index: currentOffset + j });
+        }
+        if (group.length > 0) groups.push(group);
+        currentOffset += phraseLen;
+      }
+      return groups;
+    }
+
+    if (palta.pattern === 'Progressive High Reach') {
+      let currentOffset = 0;
+      for (let i = 2; i <= 12; i++) {
+        const phraseLen = i + (i - 1);
+        const group = [];
+        for (let j = 0; j < phraseLen && currentOffset + j < notes.length; j++) {
+          group.push({ swara: notes[currentOffset + j].swara, octave: notes[currentOffset + j].octave, index: currentOffset + j });
+        }
+        if (group.length > 0) groups.push(group);
+        currentOffset += phraseLen;
+      }
+      return groups;
+    }
+
+    if (palta.pattern === 'Progressive Low Reach') {
+      let currentOffset = 0;
+      for (let i = 3; i <= 7; i += 2) {
+        const group = [];
+        for (let j = 0; j < i && currentOffset + j < notes.length; j++) {
+          group.push({ swara: notes[currentOffset + j].swara, octave: notes[currentOffset + j].octave, index: currentOffset + j });
+        }
+        if (group.length > 0) groups.push(group);
+        currentOffset += i;
+      }
+      return groups;
+    }
+
     for (let i = 0; i < notes.length; i += groupSize) {
       const group = [];
       for (let j = 0; j < groupSize && i + j < notes.length; j++) {
@@ -171,14 +222,19 @@ export function PaltaDisplay({ paltas, currentPaltaId, currentNoteIndex, onSelec
                   </div>
                   
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', flex: 1 }}>
-                    {groupedNotes.map((group, groupIndex) => (
-                      <div key={groupIndex} style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                        <div style={{ display: 'flex', gap: '3px' }}>
-                          {group.map((note) => renderNote(note, isActivePalta && currentNoteIndex === note.index))}
+                    {groupedNotes.map((group, groupIndex) => {
+                      const isAvaroha = group.some((n: any) => n.index >= (palta.arohaNoteCount || 0) && !palta.category?.includes('Merukhand') && !palta.category?.includes('Vocal Range'));
+                      const isFirstAvarohaGroup = isAvaroha && (groupIndex === 0 || !groupedNotes[groupIndex - 1].some((n: any) => n.index >= (palta.arohaNoteCount || 0)));
+
+                      return (
+                        <div key={groupIndex} style={{ display: 'flex', alignItems: 'center', gap: '3px', width: isFirstAvarohaGroup && groupIndex !== 0 ? '100%' : 'auto' }}>
+                          <div style={{ display: 'flex', gap: '3px' }}>
+                            {group.map((note) => renderNote(note, isActivePalta && currentNoteIndex === note.index))}
+                          </div>
+                          {groupIndex < groupedNotes.length - 1 && !isFirstAvarohaGroup && <span style={{ color: '#cbd5e1', fontSize: '14px' }}>•</span>}
                         </div>
-                        {groupIndex < groupedNotes.length - 1 && <span style={{ color: '#cbd5e1', fontSize: '14px' }}>•</span>}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );

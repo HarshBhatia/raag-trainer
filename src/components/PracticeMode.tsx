@@ -16,6 +16,7 @@ interface PracticeModeProps {
   totalRepetitions: number;
   thaatName: string;
   saNote: string;
+  category: string;
   timeRemaining: number;
   onRestart: () => void;
   onSkip: () => void;
@@ -116,6 +117,7 @@ export function PracticeMode({
   totalRepetitions,
   thaatName,
   saNote,
+  category,
   timeRemaining,
   onRestart,
   onSkip
@@ -146,6 +148,14 @@ export function PracticeMode({
 
   const groupSize = useMemo(() => {
     const pattern = palta.pattern;
+    if (pattern.includes('Merukhand')) {
+      const match = pattern.match(/(\d+) notes/);
+      return match ? parseInt(match[1]) : 3;
+    }
+    if (pattern === 'Building Pyramid') return 1; // Special handling for building
+    if (pattern === 'Expanding Intervals') return 2;
+    if (pattern === 'High Note Anchor') return 2;
+
     if (pattern.includes('Custom')) {
       const match = pattern.match(/\(([^)]+)\)/);
       if (match) {
@@ -162,40 +172,105 @@ export function PracticeMode({
   const arohaCount = palta.arohaNoteCount || palta.notes.length / 2;
 
   const sections = useMemo(() => {
-    const arohaNotes = palta.notes.slice(0, arohaCount);
-    const avarohaNotes = palta.notes.slice(arohaCount);
-
-    const getGroups = (notes: any[], offset: number) => {
+    const isSingleSection = palta.category?.includes('Merukhand') || palta.category?.includes('Vocal Range');
+    
+    const getGroups = (notes: any[], offset: number, size: number) => {
       const groups: any[] = [];
-      for (let i = 0; i < notes.length; i += groupSize) {
-        groups.push(notes.slice(i, i + groupSize).map((n, idx) => ({ ...n, absoluteIndex: offset + i + idx })));
+      if (palta.pattern === 'Building Pyramid') {
+        let currentOffset = 0;
+        const scaleLength = 8;
+        for (let i = 1; i <= scaleLength; i++) {
+          const phraseLen = i + (i - 1);
+          groups.push(notes.slice(currentOffset, currentOffset + phraseLen).map((n, idx) => ({ ...n, absoluteIndex: offset + currentOffset + idx })));
+          currentOffset += phraseLen;
+        }
+        return groups;
+      }
+
+      if (palta.pattern === 'Progressive High Reach') {
+        let currentOffset = 0;
+        // Phrases grow from 2 notes up to 24 (S-R-S... to S...P'...S)
+        // Sizes are 3, 5, 7, 9... (2n+1)
+        for (let i = 2; i <= 12; i++) {
+          const phraseLen = i + (i - 1);
+          groups.push(notes.slice(currentOffset, currentOffset + phraseLen).map((n, idx) => ({ ...n, absoluteIndex: offset + currentOffset + idx })));
+          currentOffset += phraseLen;
+        }
+        return groups;
+      }
+
+      if (palta.pattern === 'Progressive Low Reach') {
+        let currentOffset = 0;
+        // Phrases are S-N.-S (3), S-N.-D.-N.-S (5), S-N.-D.-P.-D.-N.-S (7)
+        for (let i = 3; i <= 7; i += 2) {
+          groups.push(notes.slice(currentOffset, currentOffset + i).map((n, idx) => ({ ...n, absoluteIndex: offset + currentOffset + idx })));
+          currentOffset += i;
+        }
+        return groups;
+      }
+
+      for (let i = 0; i < notes.length; i += size) {
+        groups.push(notes.slice(i, i + size).map((n, idx) => ({ ...n, absoluteIndex: offset + i + idx })));
       }
       return groups;
     };
 
+    if (isSingleSection) {
+      return {
+        aroha: getGroups(palta.notes, 0, groupSize),
+        avaroha: []
+      };
+    }
+
+    const arohaNotes = palta.notes.slice(0, arohaCount);
+    const avarohaNotes = palta.notes.slice(arohaCount);
+
     return {
-      aroha: getGroups(arohaNotes, 0),
-      avaroha: getGroups(avarohaNotes, arohaCount)
+      aroha: getGroups(arohaNotes, 0, groupSize),
+      avaroha: getGroups(avarohaNotes, arohaCount, groupSize)
     };
-  }, [palta.notes, arohaCount, groupSize]);
+  }, [palta.notes, arohaCount, groupSize, palta.category, palta.pattern]);
 
   const isMobile = windowWidth < 768;
-  const totalNotes = palta.notes.length;
-  
-  const scaleFactor = useMemo(() => {
-    let factor = isMobile ? 0.55 : 1.0; // Much more aggressive on mobile
-    if (totalNotes > 120) factor *= 0.3;
-    else if (totalNotes > 100) factor *= 0.35;
-    else if (totalNotes > 80) factor *= 0.4;
-    else if (totalNotes > 60) factor *= 0.45;
-    else if (totalNotes > 48) factor *= 0.5;
-    else if (totalNotes > 32) factor *= 0.6;
-    else if (totalNotes > 24) factor *= 0.7;
-    else if (totalNotes > 12) factor *= 0.8;
-    return factor;
-  }, [totalNotes, isMobile]);
 
-  const renderSection = (groups: any[], color: string) => (
+  const PHRASES_PER_PAGE = isMobile ? 12 : 24;
+
+  // Pagination Logic
+  const paginatedSections = useMemo(() => {
+    const allGroups = [...sections.aroha, ...sections.avaroha];
+    // Only paginate if we have many phrases
+    if (allGroups.length <= PHRASES_PER_PAGE) {
+      return [allGroups];
+    }
+    const pages: any[][] = [];
+    for (let i = 0; i < allGroups.length; i += PHRASES_PER_PAGE) {
+      pages.push(allGroups.slice(i, i + PHRASES_PER_PAGE));
+    }
+    return pages;
+  }, [sections, PHRASES_PER_PAGE]);
+
+  const currentPageIndex = useMemo(() => {
+    if (currentNoteIndex === -1) return 0;
+    const page = paginatedSections.findIndex(page => 
+      page.some(group => group.some((n: any) => n.absoluteIndex === currentNoteIndex))
+    );
+    return page === -1 ? 0 : page;
+  }, [currentNoteIndex, paginatedSections]);
+
+  const scaleFactor = useMemo(() => {
+    let factor = isMobile ? 0.55 : 1.0;
+    // Base scale on PHRASES PER PAGE now, not total notes
+    const notesInView = paginatedSections[currentPageIndex]?.reduce((acc, g) => acc + g.length, 0) || 0;
+    
+    if (notesInView > 60) factor *= 0.45;
+    else if (notesInView > 48) factor *= 0.5;
+    else if (notesInView > 32) factor *= 0.6;
+    else if (notesInView > 24) factor *= 0.7;
+    else if (notesInView > 12) factor *= 0.8;
+    return factor;
+  }, [currentPageIndex, paginatedSections, isMobile]);
+
+  const renderPage = (groups: any[]) => (
     <div style={{ width: '100%', marginBottom: isMobile ? '4px' : '15px' }}>
       <div style={{
         display: 'flex',
@@ -204,33 +279,41 @@ export function PracticeMode({
         justifyContent: 'center',
         padding: '2px'
       }}>
-        {groups.map((group, groupIdx) => (
-          <div 
-            key={groupIdx} 
-            style={{ 
-              display: 'flex', 
-              flexWrap: 'nowrap', 
-              justifyContent: 'center',
-              gap: `${3 * scaleFactor}px`, 
-              padding: `${4 * scaleFactor}px`, 
-              border: `${Math.max(1, 1 * scaleFactor)}px solid ${color}`,
-              borderRadius: `${8 * scaleFactor}px`,
-              backgroundColor: 'rgba(30, 41, 59, 0.5)',
-              alignItems: 'center',
-            }}
-          >
-            {group.map((note: any) => (
-              <PracticeNote 
-                key={note.absoluteIndex} 
-                note={note} 
-                isActive={currentNoteIndex === note.absoluteIndex}
-                activeColor={color}
-                notation={notation}
-                scaleFactor={scaleFactor}
-              />
-            ))}
-          </div>
-        ))}
+        {groups.map((group, groupIdx) => {
+          const isAvaroha = group.some((n: any) => n.absoluteIndex >= (palta.arohaNoteCount || 0) && !palta.category?.includes('Merukhand') && !palta.category?.includes('Vocal Range'));
+          const isFirstAvarohaGroup = isAvaroha && (groupIdx === 0 || !groups[groupIdx - 1].some((n: any) => n.absoluteIndex >= (palta.arohaNoteCount || 0)));
+          const color = isAvaroha ? '#ef4444' : '#10b981';
+          
+          return (
+            <React.Fragment key={groupIdx}>
+              {isFirstAvarohaGroup && groupIdx !== 0 && <div style={{ width: '100%', height: '20px' }} />}
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  flexWrap: 'nowrap', 
+                  justifyContent: 'center',
+                  gap: `${3 * scaleFactor}px`, 
+                  padding: `${4 * scaleFactor}px`, 
+                  border: `${Math.max(1, 1 * scaleFactor)}px solid ${color}`,
+                  borderRadius: `${8 * scaleFactor}px`,
+                  backgroundColor: 'rgba(30, 41, 59, 0.5)',
+                  alignItems: 'center',
+                }}
+              >
+                {group.map((note: any) => (
+                  <PracticeNote 
+                    key={note.absoluteIndex} 
+                    note={note} 
+                    isActive={currentNoteIndex === note.absoluteIndex}
+                    activeColor={color}
+                    notation={notation}
+                    scaleFactor={scaleFactor}
+                  />
+                ))}
+              </div>
+            </React.Fragment>
+          );
+        })}
       </div>
     </div>
   );
@@ -285,9 +368,14 @@ export function PracticeMode({
           <span style={{ fontSize: isMobile ? '11px' : '20px', fontWeight: '900', color: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>
             {formatTime(timeRemaining)}
           </span>
+          {paginatedSections.length > 1 && (
+            <span style={{ fontSize: isMobile ? '11px' : '16px', fontWeight: '800', color: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.1)', padding: '2px 6px', borderRadius: '6px', marginLeft: '4px' }}>
+              PG {currentPageIndex + 1}/{paginatedSections.length}
+            </span>
+          )}
           <div style={{ marginLeft: isMobile ? '2px' : '20px', minWidth: 0 }}>
             <h2 style={{ fontSize: isMobile ? '12px' : '20px', margin: 0, color: '#f8fafc', fontWeight: '800', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {thaatName} • {saNote}
+              {category} • {thaatName} • {saNote}
             </h2>
           </div>
         </div>
@@ -306,7 +394,7 @@ export function PracticeMode({
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', padding: isMobile ? '2px' : '10px 40px',
-        width: '100%', boxSizing: 'border-box', overflow: 'hidden'
+        width: '100%', boxSizing: 'border-box', overflowY: 'auto'
       }}>
         {/* Metronome */}
         <div style={{ height: isMobile ? '25px' : '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', marginBottom: '2px', flexShrink: 0 }}>
@@ -325,8 +413,7 @@ export function PracticeMode({
         </div>
 
         <div style={{ width: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-          {renderSection(sections.aroha, '#10b981')}
-          {renderSection(sections.avaroha, '#ef4444')}
+          {paginatedSections[currentPageIndex] && renderPage(paginatedSections[currentPageIndex])}
         </div>
       </div>
 
@@ -367,11 +454,6 @@ export function PracticeMode({
           >
             SKIP ⏭
           </button>
-
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: '8px', color: '#94a3b8', margin: '0 0 1px 0', textTransform: 'uppercase' }}>Loop</p>
-            <p style={{ fontSize: isMobile ? '14px' : '18px', fontWeight: '900', margin: 0, color: '#10b981' }}>ON</p>
-          </div>
         </div>
       </div>
       
