@@ -29,7 +29,7 @@ function App() {
   const [repetitions, setRepetitions] = useState(savedPrefs.repetitions || 2);
   const [loop] = useState(savedPrefs.loop !== undefined ? savedPrefs.loop : false);
   const [notation, setNotation] = useState<Notation>(savedPrefs.notation || 'hindi');
-  const [soundType, setSoundType] = useState<SoundType>(savedPrefs.soundType || 'harmonium');
+  const [soundType, setSoundType] = useState<SoundType>(savedPrefs.soundType || 'piano');
   const [isTanpuraPlaying, setIsTanpuraPlaying] = useState(savedPrefs.isTanpuraPlaying || false);
   const [tanpuraVolume, setTanpuraVolume] = useState(savedPrefs.tanpuraVolume !== undefined ? savedPrefs.tanpuraVolume : 0.4);
   const [selectedCategory, setSelectedCategory] = useState<string>(savedPrefs.selectedCategory || 'All');
@@ -178,20 +178,6 @@ function App() {
     }
   }, [isTanpuraPlaying, saNote, selectedThaat]);
 
-  useEffect(() => {
-    if (isPlaying && !isAutoSwitching.current) {
-      const currentMode = playbackMode;
-      handleStop();
-      setTimeout(() => {
-        if (currentMode === 'sequential') {
-          handlePlaySequential(true);
-        } else {
-          handlePlayLoop();
-        }
-      }, 50);
-    }
-  }, [currentPaltaId]);
-
   const getGroupSize = (pattern: string) => {
     if (pattern.includes('Custom')) {
       const match = pattern.match(/\(([^)]+)\)/);
@@ -220,9 +206,6 @@ function App() {
   const handlePlaySequential = async (startFromCurrent = true) => {
     if (visiblePaltas.length === 0) return;
     setPlaybackMode('sequential');
-    isAutoSwitching.current = true;
-    const currentId = playbackId + 1;
-    setPlaybackId(currentId);
     setIsPlaying(true);
     
     if (!sessionStartTime.current) {
@@ -232,14 +215,19 @@ function App() {
     }
 
     audioEngine.start();
-    const startIndex = startFromCurrent ? visiblePaltas.findIndex(p => p.id === currentPaltaId) : 0;
-    const effectiveStartIndex = startIndex === -1 ? 0 : startIndex;
+    const playbackIdAtStart = playbackId + 1;
+    setPlaybackId(playbackIdAtStart);
 
-    for (let paltaIndex = effectiveStartIndex; paltaIndex < visiblePaltas.length; paltaIndex++) {
+    let startIndex = startFromCurrent ? visiblePaltas.findIndex(p => p.id === currentPaltaId) : 0;
+    if (startIndex === -1) startIndex = 0;
+
+    for (let paltaIndex = startIndex; paltaIndex < visiblePaltas.length; paltaIndex++) {
       if (!audioEngine.getIsPlaying()) break;
       const palta = visiblePaltas[paltaIndex];
+      
       isAutoSwitching.current = true;
       setCurrentPaltaId(palta.id);
+      
       const groupSize = getGroupSize(palta.pattern);
       
       await audioEngine.playIntro(tempo, setIntroBeat);
@@ -250,24 +238,32 @@ function App() {
         setCurrentRepetition(rep + 1);
         await audioEngine.playTaan(palta.notes, tempo, groupSize, (index) => {
           setCurrentNoteIndex(index);
-          totalNotesPlayed.current += 1;
+          if (index !== -1) totalNotesPlayed.current += 1;
         });
       }
-      completedPaltasCount.current += 1;
+      
+      if (audioEngine.getIsPlaying()) {
+        completedPaltasCount.current += 1;
+      }
+      isAutoSwitching.current = false;
     }
     
-    if (audioEngine.getIsPlaying()) {
-      // Finished all paltas naturally
-      const duration = (Date.now() - sessionStartTime.current!) / 1000;
-      setFinalStats({
-        duration,
-        paltas: completedPaltasCount.current,
-        notes: totalNotesPlayed.current
-      });
-      handleStop();
-      setIsPracticeMode(false);
-      setShowStats(true);
-      sessionStartTime.current = null;
+    // Finished naturally?
+    if (audioEngine.getIsPlaying() && playbackMode === 'sequential') {
+      if (loop) {
+        handlePlaySequential(false);
+      } else {
+        const duration = (Date.now() - sessionStartTime.current!) / 1000;
+        setFinalStats({
+          duration,
+          paltas: completedPaltasCount.current,
+          notes: totalNotesPlayed.current
+        });
+        handleStop();
+        setIsPracticeMode(false);
+        setShowStats(true);
+        sessionStartTime.current = null;
+      }
     }
   };
 
@@ -322,8 +318,24 @@ function App() {
   };
 
   const handleManualSelectPalta = (id: number) => {
-    isAutoSwitching.current = false;
+    const wasPlaying = isPlaying;
+    const currentMode = playbackMode;
+    
+    if (wasPlaying) {
+      handleStop();
+    }
+    
     setCurrentPaltaId(id);
+    
+    if (wasPlaying) {
+      setTimeout(() => {
+        if (currentMode === 'sequential') {
+          handlePlaySequential(true);
+        } else {
+          handlePlayLoop();
+        }
+      }, 50);
+    }
   };
 
   const getNextSetName = () => {
@@ -365,7 +377,6 @@ function App() {
       maxWidth: '1400px',
       margin: '0 auto',
       padding: 'var(--spacing-app)',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
       backgroundColor: '#f8fafc',
       minHeight: '100vh',
       boxSizing: 'border-box'

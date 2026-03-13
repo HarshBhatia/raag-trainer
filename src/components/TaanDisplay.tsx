@@ -29,7 +29,6 @@ export function TaanDisplay({ notes, currentNoteIndex }: TaanDisplayProps) {
         flexWrap: 'wrap',
         gap: '8px',
         fontSize: '20px',
-        fontFamily: 'monospace',
       }}>
         {notes.map((note, index) => (
           <span

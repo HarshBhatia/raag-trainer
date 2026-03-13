@@ -1,9 +1,24 @@
+import { useState, useEffect } from 'react';
+
 interface StartPracticeProps {
   onStart: () => void;
   onExit: () => void;
 }
 
 export function StartPractice({ onStart, onExit }: StartPracticeProps) {
+  const [secondsLeft, setSecondsLeft] = useState(5);
+
+  useEffect(() => {
+    if (secondsLeft <= 0) {
+      onStart();
+      return;
+    }
+    const timer = setInterval(() => {
+      setSecondsLeft(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [secondsLeft, onStart]);
+
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
@@ -18,7 +33,7 @@ export function StartPractice({ onStart, onExit }: StartPracticeProps) {
       }}>
         <div style={{ fontSize: '64px', marginBottom: '20px' }}>✨</div>
         <h1 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '10px', color: '#f59e0b' }}>All the Best!</h1>
-        <p style={{ color: '#94a3b8', marginBottom: '32px' }}>Prepare yourself for a mindful practice session.</p>
+        <p style={{ color: '#94a3b8', marginBottom: '32px' }}>Starting in {secondsLeft} seconds...</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '40px', textAlign: 'left' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: '#0f172a', padding: '16px', borderRadius: '16px' }}>
@@ -67,7 +82,7 @@ export function StartPractice({ onStart, onExit }: StartPracticeProps) {
               textTransform: 'uppercase', letterSpacing: '1px'
             }}
           >
-            START NOW
+            START NOW ({secondsLeft}s)
           </button>
         </div>
       </div>

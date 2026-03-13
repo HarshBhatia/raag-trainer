@@ -238,7 +238,7 @@ export function PracticeMode({
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
       backgroundColor: '#0f172a', color: '#fff', zIndex: 1000,
       display: 'flex', flexDirection: 'column', boxSizing: 'border-box',
-      overflow: 'hidden', height: '100dvh' 
+      overflow: 'hidden', height: '100dvh'
     }}>
       {showRestartPrompt && (
         <div style={{
