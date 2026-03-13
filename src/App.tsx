@@ -498,7 +498,7 @@ function App() {
         borderRadius: '24px',
         boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
         display: 'flex',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         alignItems: 'center',
         border: '1px solid #e2e8f0'
       }}>
@@ -511,14 +511,6 @@ function App() {
           }}>🎵</span>
           <span>Raag <span style={{ color: '#6366f1' }}>Trainer</span></span>
         </h1>
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <span style={{ padding: '6px 14px', backgroundColor: '#f1f5f9', borderRadius: '100px', fontSize: '12px', fontWeight: '700', color: '#64748b', border: '1px solid #e2e8f0' }}>
-            {onboarding.gender === 'male' ? '👨 Male' : '👩 Female'}
-          </span>
-          <span style={{ padding: '6px 14px', backgroundColor: '#f1f5f9', borderRadius: '100px', fontSize: '12px', fontWeight: '700', color: '#64748b', border: '1px solid #e2e8f0' }}>
-            ⚡️ {onboarding.experience.toUpperCase()}
-          </span>
-        </div>
       </header>
 
       <div className="main-layout" style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
