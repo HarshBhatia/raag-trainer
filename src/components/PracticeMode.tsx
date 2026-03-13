@@ -233,7 +233,7 @@ export function PracticeMode({
 
   const isMobile = windowWidth < 768;
 
-  const PHRASES_PER_PAGE = isMobile ? 12 : 24;
+  const PHRASES_PER_PAGE = isMobile ? 24 : 24;
 
   // Pagination Logic
   const paginatedSections = useMemo(() => {
@@ -353,42 +353,49 @@ export function PracticeMode({
       {/* Simplified Header for Mobile */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: isMobile ? '6px 10px' : '15px 30px', width: '100%',
+        padding: isMobile ? '12px 16px' : '15px 30px', width: '100%',
         boxSizing: 'border-box', borderBottom: '1px solid #1e293b', flexShrink: 0, gap: '8px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '20px', overflow: 'hidden' }}>
-          <span style={{ fontSize: isMobile ? '13px' : '24px', fontWeight: '900', color: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '20px', overflow: 'hidden' }}>
+          <span style={{ fontSize: isMobile ? '16px' : '24px', fontWeight: '900', color: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.1)', padding: '4px 8px', borderRadius: '8px' }}>
             {currentIndex}/{totalCount}
           </span>
-          <div style={{ width: '1px', height: '14px', backgroundColor: '#334155' }}></div>
-          <span style={{ fontSize: isMobile ? '13px' : '24px', fontWeight: '900', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>
+          <div style={{ width: '1px', height: '18px', backgroundColor: '#334155' }}></div>
+          <span style={{ fontSize: isMobile ? '16px' : '24px', fontWeight: '900', color: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '8px' }}>
             {currentRepetition || 1}/{totalRepetitions}
           </span>
-          <div style={{ width: '1px', height: '14px', backgroundColor: '#334155' }}></div>
-          <span style={{ fontSize: isMobile ? '11px' : '20px', fontWeight: '900', color: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>
+          <div style={{ width: '1px', height: '18px', backgroundColor: '#334155' }}></div>
+          <span style={{ fontSize: isMobile ? '14px' : '20px', fontWeight: '900', color: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)', padding: '4px 8px', borderRadius: '8px' }}>
             {formatTime(timeRemaining)}
           </span>
           {paginatedSections.length > 1 && (
-            <span style={{ fontSize: isMobile ? '11px' : '16px', fontWeight: '800', color: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.1)', padding: '2px 6px', borderRadius: '6px', marginLeft: '4px' }}>
+            <span style={{ fontSize: isMobile ? '12px' : '16px', fontWeight: '800', color: '#94a3b8', backgroundColor: 'rgba(148, 163, 184, 0.1)', padding: '4px 8px', borderRadius: '8px', marginLeft: '4px' }}>
               PG {currentPageIndex + 1}/{paginatedSections.length}
             </span>
           )}
-          <div style={{ marginLeft: isMobile ? '2px' : '20px', minWidth: 0 }}>
-            <h2 style={{ fontSize: isMobile ? '12px' : '20px', margin: 0, color: '#f8fafc', fontWeight: '800', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {category} • {thaatName} • {saNote}
-            </h2>
-          </div>
         </div>
         <button 
           onClick={onExit}
           style={{
-            padding: isMobile ? '4px 10px' : '8px 16px', backgroundColor: '#ef4444', color: '#fff',
-            border: 'none', borderRadius: '8px', fontSize: isMobile ? '10px' : '14px',
-            fontWeight: '800', cursor: 'pointer', flexShrink: 0
+            padding: isMobile ? '10px 16px' : '12px 24px', backgroundColor: '#ef4444', color: '#fff',
+            border: 'none', borderRadius: '10px', fontSize: isMobile ? '14px' : '16px',
+            fontWeight: '900', cursor: 'pointer', flexShrink: 0, textTransform: 'uppercase'
           }}
         >
           Exit
         </button>
+      </div>
+
+      {/* Set Name Bar (Separate line on mobile for readability) */}
+      <div style={{ 
+        width: '100%', padding: isMobile ? '8px 16px' : '0', 
+        display: isMobile ? 'block' : 'none', 
+        backgroundColor: 'rgba(30, 41, 59, 0.3)',
+        borderBottom: '1px solid #1e293b'
+      }}>
+        <h2 style={{ fontSize: '13px', margin: 0, color: '#94a3b8', fontWeight: '700', textAlign: 'center' }}>
+          {category} • {thaatName} • {saNote}
+        </h2>
       </div>
 
       <div style={{
@@ -435,24 +442,50 @@ export function PracticeMode({
           <button
             onClick={onTogglePlay}
             style={{
-              width: isMobile ? '40px' : '60px', height: isMobile ? '40px' : '60px',
+              width: isMobile ? '50px' : '60px', height: isMobile ? '50px' : '60px',
               borderRadius: '50%', backgroundColor: isPlaying ? '#ef4444' : '#10b981',
               color: '#fff', border: 'none', fontSize: isMobile ? '18px' : '28px',
               cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)', position: 'relative'
             }}
-          >{isPlaying ? '⏸' : '▶'}</button>
+          >
+            {isPlaying ? (
+              // Custom Pause Icon
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <div style={{ width: '6px', height: '20px', backgroundColor: '#fff', borderRadius: '2px' }}></div>
+                <div style={{ width: '6px', height: '20px', backgroundColor: '#fff', borderRadius: '2px' }}></div>
+              </div>
+            ) : (
+              // Custom Play Icon
+              <div style={{ 
+                width: 0, height: 0, 
+                borderTop: '12px solid transparent',
+                borderBottom: '12px solid transparent',
+                borderLeft: '20px solid #fff',
+                marginLeft: '4px'
+              }}></div>
+            )}
+          </button>
           
           <button
             onClick={onSkip}
             style={{
-              padding: isMobile ? '4px 8px' : '8px 16px',
+              padding: isMobile ? '10px 16px' : '12px 24px',
               backgroundColor: '#334155', color: '#fff',
-              border: 'none', borderRadius: '8px', fontSize: isMobile ? '10px' : '14px',
-              fontWeight: '800', cursor: 'pointer'
+              border: 'none', borderRadius: '12px', fontSize: isMobile ? '12px' : '14px',
+              fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'
             }}
           >
-            SKIP ⏭
+            <span>SKIP</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+              <div style={{ 
+                width: 0, height: 0, 
+                borderTop: '6px solid transparent',
+                borderBottom: '6px solid transparent',
+                borderLeft: '10px solid #fff' 
+              }}></div>
+              <div style={{ width: '3px', height: '12px', backgroundColor: '#fff', borderRadius: '1px' }}></div>
+            </div>
           </button>
         </div>
       </div>
