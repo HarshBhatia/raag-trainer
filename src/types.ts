@@ -26,10 +26,19 @@ export interface TaanNote {
   octave: number;
 }
 
-export interface Palta {
+export type Palta = {
   id: number;
   notes: TaanNote[];
   pattern: string;
   category?: string;
   arohaNoteCount?: number;
+};
+
+export type UserExperience = 'beginner' | 'intermediate' | 'advanced';
+export type UserGender = 'male' | 'female';
+
+export interface UserPrefs {
+  gender: UserGender;
+  experience: UserExperience;
+  onboarded: boolean;
 }
