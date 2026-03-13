@@ -84,12 +84,9 @@ function App() {
     if (selectedCategory !== 'All') {
       base = paltas.filter(p => p.category === selectedCategory);
     }
-    // Set order based on experience
-    if (onboarding?.experience === 'advanced') {
-      return [...base].reverse(); // Complex first
-    }
+    // Strict linear order as requested (paltas are already in order from generator)
     return base;
-  }, [paltas, selectedCategory, onboarding]);
+  }, [paltas, selectedCategory]);
 
   const currentIndex = useMemo(() => {
     const idx = visiblePaltas.findIndex(p => p.id === currentPaltaId);
@@ -100,7 +97,8 @@ function App() {
   useEffect(() => {
     let timer: number;
     if (isPlaying && playbackMode === 'sequential') {
-      timer = window.setInterval(() => {
+      // Initialize immediately to prevent glitch
+      const updateTimer = () => {
         const startIdx = visiblePaltas.findIndex(p => p.id === currentPaltaId);
         if (startIdx === -1) return;
         
@@ -108,22 +106,29 @@ function App() {
         const noteDuration = 60 / (tempo * 2);
         const introDuration = 4 * (60 / tempo);
         
-        // Remaining time for current palta
-        const currentPalta = visiblePaltas[startIdx];
-        const remainingReps = repetitions - (currentRepetition || 1) + 1;
-        const notesInCurrentRep = currentPalta.notes.length - (currentNoteIndex + 1);
-        
-        totalSeconds += notesInCurrentRep * noteDuration;
-        totalSeconds += (remainingReps - 1) * currentPalta.notes.length * noteDuration;
-        
         // Time for subsequent paltas
         for (let i = startIdx + 1; i < visiblePaltas.length; i++) {
           const palta = visiblePaltas[i];
           totalSeconds += introDuration;
           totalSeconds += palta.notes.length * repetitions * noteDuration;
         }
+
+        // Remaining time for current palta
+        const currentPalta = visiblePaltas[startIdx];
+        const remainingReps = Math.max(0, repetitions - currentRepetition);
+        
+        // Time left in the current repetition
+        const notesLeftInRep = Math.max(0, currentPalta.notes.length - (currentNoteIndex + 1));
+        totalSeconds += notesLeftInRep * noteDuration;
+        
+        // Time for remaining full repetitions
+        totalSeconds += remainingReps * currentPalta.notes.length * noteDuration;
+        
         setDynamicTimeRemaining(Math.max(0, totalSeconds));
-      }, 100);
+      };
+
+      updateTimer();
+      timer = window.setInterval(updateTimer, 200);
     } else {
       setDynamicTimeRemaining(0);
     }
@@ -225,8 +230,9 @@ function App() {
       if (!audioEngine.getIsPlaying()) break;
       const palta = visiblePaltas[paltaIndex];
       
-      isAutoSwitching.current = true;
       setCurrentPaltaId(palta.id);
+      setCurrentRepetition(0);
+      setCurrentNoteIndex(-1);
       
       const groupSize = getGroupSize(palta.pattern);
       
@@ -245,15 +251,14 @@ function App() {
       if (audioEngine.getIsPlaying()) {
         completedPaltasCount.current += 1;
       }
-      isAutoSwitching.current = false;
     }
     
-    // Finished naturally?
-    if (audioEngine.getIsPlaying() && playbackMode === 'sequential') {
+    // Check if we finished the loop naturally (reached the end)
+    if (audioEngine.getIsPlaying()) {
       if (loop) {
         handlePlaySequential(false);
       } else {
-        const duration = (Date.now() - sessionStartTime.current!) / 1000;
+        const duration = (Date.now() - (sessionStartTime.current || Date.now())) / 1000;
         setFinalStats({
           duration,
           paltas: completedPaltasCount.current,
@@ -503,25 +508,20 @@ function App() {
       )}
 
       <header style={{
-        marginBottom: '40px',
-        padding: '24px 32px',
-        backgroundColor: '#fff',
-        borderRadius: '24px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+        marginBottom: '24px',
+        padding: '16px 20px',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        border: '1px solid #e2e8f0'
       }}>
-        <h1 style={{ color: '#1e293b', margin: 0, fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ 
-            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-            width: '48px', height: '48px', borderRadius: '14px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '24px', boxShadow: '0 10px 15px -3px rgba(99, 102, 241, 0.3)'
-          }}>🎵</span>
-          <span>Raag <span style={{ color: '#6366f1' }}>Trainer</span></span>
-        </h1>
+        <div style={{ 
+          background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+          width: '40px', height: '40px', borderRadius: '12px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '20px', boxShadow: '0 8px 12px -3px rgba(99, 102, 241, 0.3)',
+          color: '#fff',
+          fontWeight: '900'
+        }}>R</div>
       </header>
 
       <div className="main-layout" style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
