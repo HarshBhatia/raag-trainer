@@ -8,6 +8,7 @@ import { Controls } from './components/Controls';
 import { PracticeMode } from './components/PracticeMode';
 import { Onboarding } from './components/Onboarding';
 import { PracticeStats } from './components/PracticeStats';
+import { StartPractice } from './components/StartPractice';
 import { UserPrefs } from './types';
 
 const paltaGenerator = new PaltaGenerator('C#');
@@ -43,6 +44,7 @@ function App() {
   const [playbackId, setPlaybackId] = useState(0);
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showStartPrompt, setShowStartPrompt] = useState(false);
   const [introBeat, setIntroBeat] = useState(0);
   const [showPaltaList, setShowPaltaList] = useState(false);
   
@@ -427,6 +429,17 @@ function App() {
         />
       )}
 
+      {showStartPrompt && (
+        <StartPractice
+          onStart={() => {
+            setShowStartPrompt(false);
+            setIsPracticeMode(true);
+            handlePlaySequential(true);
+          }}
+          onExit={() => setShowStartPrompt(false)}
+        />
+      )}
+
       {isPracticeMode && visiblePaltas.find(p => p.id === currentPaltaId) && (
         <PracticeMode
           palta={visiblePaltas.find(p => p.id === currentPaltaId)!}
@@ -495,8 +508,7 @@ function App() {
             className="hero-button"
             onClick={() => {
               handleStop();
-              setIsPracticeMode(true);
-              handlePlaySequential(true);
+              setShowStartPrompt(true);
             }}
           >
             <span>▶</span> PRACTICE
