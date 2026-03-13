@@ -271,15 +271,12 @@ export class PaltaGenerator {
 
   generateMultiplePaltas(raag: Raag): Palta[] {
     const definitions: { p: string, cat: string, max?: number }[] = [
-      // 1. Basic Alankars (8)
+      // 1. Basic Alankars (5)
       { p: "1", cat: "1. Basic Alankars" },
       { p: "12", cat: "1. Basic Alankars" },
       { p: "123", cat: "1. Basic Alankars" },
       { p: "1234", cat: "1. Basic Alankars" },
       { p: "12345", cat: "1. Basic Alankars" },
-      { p: "123456", cat: "1. Basic Alankars" },
-      { p: "1234567", cat: "1. Basic Alankars" },
-      { p: "12345678", cat: "1. Basic Alankars" },
       
       // 2. Jumping Notes (8)
       { p: "13", cat: "2. Jumping Notes" },

@@ -32,7 +32,7 @@ function App() {
   const [soundType, setSoundType] = useState<SoundType>(savedPrefs.soundType || 'piano');
   const [isTanpuraPlaying, setIsTanpuraPlaying] = useState(savedPrefs.isTanpuraPlaying || false);
   const [tanpuraVolume, setTanpuraVolume] = useState(savedPrefs.tanpuraVolume !== undefined ? savedPrefs.tanpuraVolume : 0.4);
-  const [selectedCategory, setSelectedCategory] = useState<string>(savedPrefs.selectedCategory || 'All');
+  const [selectedCategory, setSelectedCategory] = useState<string>(savedPrefs.selectedCategory || '1. Basic Alankars');
   const [enableGlide, setEnableGlide] = useState(savedPrefs.enableGlide || false);
   const [customPaltas, setCustomPaltas] = useState<Palta[]>(savedPrefs.customPaltas || []);
   const [currentPaltaId, setCurrentPaltaId] = useState(savedPrefs.currentPaltaId || 1);
@@ -142,7 +142,8 @@ function App() {
 
   const categories = useMemo(() => {
     const cats = new Set(paltas.map(p => p.category || 'Other'));
-    return ['All', ...Array.from(cats)];
+    const sortedCats = Array.from(cats).sort();
+    return [...sortedCats, 'All'];
   }, [paltas]);
 
   useEffect(() => {
