@@ -68,7 +68,7 @@ export function RaagSelector({ raags, selectedRaag, onSelect, notation }: RaagSe
       boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
     }}>
       <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#475569', fontSize: '12px', textTransform: 'uppercase' }}>
-        Select Raag
+        Select Thaat
       </label>
       <select
         value={selectedRaag.name}
