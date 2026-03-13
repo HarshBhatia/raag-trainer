@@ -110,29 +110,55 @@ export class PaltaGenerator {
 
   generateMultiplePaltas(raag: Raag): Palta[] {
     const definitions = [
-      { p: "1", cat: "Basic" },
-      { p: "12", cat: "Basic" },
-      { p: "123", cat: "Basic" },
-      { p: "1234", cat: "Basic" },
-      { p: "11", cat: "Janti" },
-      { p: "1122", cat: "Janti" },
-      { p: "111", cat: "Janti" },
-      { p: "111222", cat: "Janti" },
-      { p: "13", cat: "Skipping" },
-      { p: "132", cat: "Skipping" },
-      { p: "1324", cat: "Skipping" },
-      { p: "1432", cat: "Skipping" },
-      { p: "121", cat: "Return" },
-      { p: "1321", cat: "Return" },
-      { p: "1232", cat: "Return" },
-      { p: "1234321", cat: "Return" },
-      { p: "1213", cat: "Complex" },
-      { p: "13243546", cat: "Complex" },
-      { p: "1231", cat: "Complex" },
-      { p: "1234123", cat: "Complex" },
-      { p: "135", cat: "Triads" },
-      { p: "153", cat: "Triads" },
-      { p: "142", cat: "Triads" },
+      // 1. Basic Alankars (8)
+      { p: "1", cat: "1. Basic Alankars" },
+      { p: "12", cat: "1. Basic Alankars" },
+      { p: "123", cat: "1. Basic Alankars" },
+      { p: "1234", cat: "1. Basic Alankars" },
+      { p: "12345", cat: "1. Basic Alankars" },
+      { p: "123456", cat: "1. Basic Alankars" },
+      { p: "1234567", cat: "1. Basic Alankars" },
+      { p: "12345678", cat: "1. Basic Alankars" },
+      
+      // 2. Jumping Notes (8)
+      { p: "13", cat: "2. Jumping Notes (builds agility)" },
+      { p: "132", cat: "2. Jumping Notes (builds agility)" },
+      { p: "1324", cat: "2. Jumping Notes (builds agility)" },
+      { p: "132435", cat: "2. Jumping Notes (builds agility)" },
+      { p: "14", cat: "2. Jumping Notes (builds agility)" },
+      { p: "1425", cat: "2. Jumping Notes (builds agility)" },
+      { p: "1432", cat: "2. Jumping Notes (builds agility)" },
+      { p: "153", cat: "2. Jumping Notes (builds agility)" },
+      
+      // 3. Vocal Range Increase (8)
+      { p: "1", cat: "3. Vocal Range Increase" },
+      { p: "121", cat: "3. Vocal Range Increase" },
+      { p: "12321", cat: "3. Vocal Range Increase" },
+      { p: "1234321", cat: "3. Vocal Range Increase" },
+      { p: "123454321", cat: "3. Vocal Range Increase" },
+      { p: "12345654321", cat: "3. Vocal Range Increase" },
+      { p: "1234567654321", cat: "3. Vocal Range Increase" },
+      { p: "123456787654321", cat: "3. Vocal Range Increase" },
+      
+      // 4. Complex Palta (8)
+      { p: "1213", cat: "4. Complex Palta" },
+      { p: "13243546", cat: "4. Complex Palta" },
+      { p: "1231", cat: "4. Complex Palta" },
+      { p: "1234123", cat: "4. Complex Palta" },
+      { p: "13214321", cat: "4. Complex Palta" },
+      { p: "1423", cat: "4. Complex Palta" },
+      { p: "1342", cat: "4. Complex Palta" },
+      { p: "1243", cat: "4. Complex Palta" },
+
+      // 5. Merukhand (8 - The 3-note permutations)
+      { p: "123", cat: "5. Merukhand" },
+      { p: "132", cat: "5. Merukhand" },
+      { p: "213", cat: "5. Merukhand" },
+      { p: "231", cat: "5. Merukhand" },
+      { p: "312", cat: "5. Merukhand" },
+      { p: "321", cat: "5. Merukhand" },
+      { p: "123213", cat: "5. Merukhand" }, // Combination
+      { p: "132321", cat: "5. Merukhand" }, // Combination
     ];
 
     return definitions.map((item, i) => {

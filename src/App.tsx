@@ -343,6 +343,14 @@ function App() {
     }
   };
 
+  const handleSkip = () => {
+    if (playbackMode === 'sequential') {
+      audioEngine.stop(); // This will break the current palta loop in handlePlaySequential
+    } else {
+      handleStop();
+    }
+  };
+
   const getNextSetName = () => {
     const currentIdx = categories.indexOf(selectedCategory);
     if (currentIdx !== -1 && currentIdx < categories.length - 1) {
@@ -362,7 +370,8 @@ function App() {
         if (firstPalta) {
           setCurrentPaltaId(firstPalta.id);
         }
-        setShowStartPrompt(true);
+        setIsPracticeMode(true);
+        handlePlaySequential(true);
       }, 50);
     }
   };
@@ -498,6 +507,7 @@ function App() {
           saNote={saNote}
           timeRemaining={dynamicTimeRemaining}
           onRestart={handleRestartPractice}
+          onSkip={handleSkip}
           onTogglePlay={isPlaying ? handleStop : () => handlePlaySequential(true)}
           onExit={() => {
             handleStop();
@@ -537,6 +547,10 @@ function App() {
             className="hero-button"
             onClick={() => {
               handleStop();
+              // Resuming only works for 'All' set
+              if (selectedCategory !== 'All' && visiblePaltas.length > 0) {
+                setCurrentPaltaId(visiblePaltas[0].id);
+              }
               setShowStartPrompt(true);
             }}
           >

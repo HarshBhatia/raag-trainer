@@ -18,6 +18,7 @@ interface PracticeModeProps {
   saNote: string;
   timeRemaining: number;
   onRestart: () => void;
+  onSkip: () => void;
 }
 
 const swaraToHindiBase: Record<Swara, string> = {
@@ -116,7 +117,8 @@ export function PracticeMode({
   thaatName,
   saNote,
   timeRemaining,
-  onRestart
+  onRestart,
+  onSkip
 }: PracticeModeProps) {
   const [showRestartPrompt, setShowRestartPrompt] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -250,7 +252,11 @@ export function PracticeMode({
         }}>
           <span style={{ fontSize: '13px', fontWeight: '700' }}>Resuming from {currentIndex}...</span>
           <button 
-            onClick={() => { onRestart(); setShowRestartPrompt(false); }}
+            onClick={() => { 
+              if (isPlaying) onTogglePlay(); 
+              onRestart(); 
+              setShowRestartPrompt(false); 
+            }}
             style={{
               padding: '4px 12px', backgroundColor: '#fff', color: '#3b82f6',
               border: 'none', borderRadius: '6px', fontWeight: '800', cursor: 'pointer', fontSize: '10px'
@@ -342,13 +348,26 @@ export function PracticeMode({
           <button
             onClick={onTogglePlay}
             style={{
-              width: isMobile ? '36px' : '60px', height: isMobile ? '36px' : '60px',
+              width: isMobile ? '40px' : '60px', height: isMobile ? '40px' : '60px',
               borderRadius: '50%', backgroundColor: isPlaying ? '#ef4444' : '#10b981',
               color: '#fff', border: 'none', fontSize: isMobile ? '18px' : '28px',
               cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center',
               boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
             }}
           >{isPlaying ? '⏸' : '▶'}</button>
+          
+          <button
+            onClick={onSkip}
+            style={{
+              padding: isMobile ? '4px 8px' : '8px 16px',
+              backgroundColor: '#334155', color: '#fff',
+              border: 'none', borderRadius: '8px', fontSize: isMobile ? '10px' : '14px',
+              fontWeight: '800', cursor: 'pointer'
+            }}
+          >
+            SKIP ⏭
+          </button>
+
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: '8px', color: '#94a3b8', margin: '0 0 1px 0', textTransform: 'uppercase' }}>Loop</p>
             <p style={{ fontSize: isMobile ? '14px' : '18px', fontWeight: '900', margin: 0, color: '#10b981' }}>ON</p>
