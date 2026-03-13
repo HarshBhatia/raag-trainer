@@ -7,24 +7,23 @@ interface StartPracticeProps {
 
 export function StartPractice({ onStart, onExit }: StartPracticeProps) {
   const [secondsLeft, setSecondsLeft] = useState(5);
-  const [isUnmuted, setIsUnmuted] = useState(false);
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   useEffect(() => {
+    // Only run timer on Desktop
+    if (isMobile) return;
+
     if (secondsLeft <= 0) {
-      if (isUnmuted || !isMobile) {
-        onStart();
-      }
+      onStart();
       return;
     }
     const timer = setInterval(() => {
       setSecondsLeft(prev => prev - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [secondsLeft, onStart, isUnmuted, isMobile]);
+  }, [secondsLeft, onStart, isMobile]);
 
   const handleManualStart = () => {
-    setIsUnmuted(true);
     onStart();
   };
 
@@ -79,8 +78,8 @@ export function StartPractice({ onStart, onExit }: StartPracticeProps) {
               border: '4px solid #fff'
             }}
           >
-            <span style={{ fontSize: '12px', opacity: 0.9 }}>TAP TO START</span>
-            <span style={{ fontSize: '40px' }}>{secondsLeft > 0 ? secondsLeft : 'GO!'}</span>
+            <span style={{ fontSize: '12px', opacity: 0.9 }}>{isMobile ? 'READY?' : 'STARTING IN'}</span>
+            <span style={{ fontSize: '40px' }}>{isMobile ? 'GO' : secondsLeft}</span>
           </button>
 
           <button
