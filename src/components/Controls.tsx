@@ -9,12 +9,9 @@ interface ControlsProps {
   onSaNoteChange: (note: NoteName) => void;
   repetitions: number;
   onRepetitionsChange: (reps: number) => void;
-  loop: boolean;
-  onLoopChange: (loop: boolean) => void;
   customPattern: string;
   onCustomPatternChange: (pattern: string) => void;
   onAddCustomPalta: () => void;
-  isPlaying: boolean;
   notation: Notation;
   onNotationChange: (notation: Notation) => void;
   soundType: SoundType;
@@ -32,12 +29,9 @@ export function Controls({
   onSaNoteChange,
   repetitions,
   onRepetitionsChange,
-  loop,
-  onLoopChange,
   customPattern,
   onCustomPatternChange,
   onAddCustomPalta,
-  isPlaying,
   notation,
   onNotationChange,
   soundType,

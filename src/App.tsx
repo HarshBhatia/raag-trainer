@@ -22,7 +22,7 @@ function App() {
   const [tempo, setTempo] = useState(savedPrefs.tempo || 135);
   const [saNote, setSaNote] = useState<NoteName>(savedPrefs.saNote || 'C#');
   const [repetitions, setRepetitions] = useState(savedPrefs.repetitions || 2);
-  const [loop, setLoop] = useState(savedPrefs.loop !== undefined ? savedPrefs.loop : false);
+  const [loop] = useState(savedPrefs.loop !== undefined ? savedPrefs.loop : false);
   const [notation, setNotation] = useState<Notation>(savedPrefs.notation || 'hindi');
   const [soundType, setSoundType] = useState<SoundType>(savedPrefs.soundType || 'harmonium');
   const [isTanpuraPlaying, setIsTanpuraPlaying] = useState(savedPrefs.isTanpuraPlaying || false);
@@ -435,8 +435,6 @@ function App() {
             onSaNoteChange={handleSaNoteChange}
             repetitions={repetitions}
             onRepetitionsChange={setRepetitions}
-            loop={loop}
-            onLoopChange={setLoop}
             notation={notation}
             onNotationChange={setNotation}
             soundType={soundType}
@@ -448,7 +446,6 @@ function App() {
             customPattern={customPattern}
             onCustomPatternChange={setCustomPattern}
             onAddCustomPalta={handleAddCustomPalta}
-            isPlaying={isPlaying}
           />
 
           {/* Mobile toggle for Palta List */}
