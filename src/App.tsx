@@ -326,6 +326,30 @@ function App() {
     setCurrentPaltaId(id);
   };
 
+  const getNextSetName = () => {
+    const currentIdx = categories.indexOf(selectedCategory);
+    if (currentIdx !== -1 && currentIdx < categories.length - 1) {
+      return categories[currentIdx + 1];
+    }
+    return null;
+  };
+
+  const handleStartNextSet = () => {
+    const nextSet = getNextSetName();
+    if (nextSet) {
+      setSelectedCategory(nextSet);
+      setShowStats(false);
+      // Wait for paltas to update based on new category
+      setTimeout(() => {
+        const firstPalta = paltas.find(p => p.category === nextSet || nextSet === 'All');
+        if (firstPalta) {
+          setCurrentPaltaId(firstPalta.id);
+        }
+        setShowStartPrompt(true);
+      }, 50);
+    }
+  };
+
   const handleOnboardingComplete = (prefs: UserPrefs) => {
     setOnboarding(prefs);
     setSaNote(prefs.gender === 'male' ? 'C#' : 'G#');
@@ -425,6 +449,8 @@ function App() {
           durationSeconds={finalStats.duration}
           paltasCount={finalStats.paltas}
           notesCount={finalStats.notes}
+          nextSetName={getNextSetName()}
+          onStartNextSet={handleStartNextSet}
           onExit={() => setShowStats(false)}
         />
       )}

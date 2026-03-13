@@ -2,10 +2,12 @@ interface PracticeStatsProps {
   durationSeconds: number;
   paltasCount: number;
   notesCount: number;
+  nextSetName: string | null;
+  onStartNextSet: () => void;
   onExit: () => void;
 }
 
-export function PracticeStats({ durationSeconds, paltasCount, notesCount, onExit }: PracticeStatsProps) {
+export function PracticeStats({ durationSeconds, paltasCount, notesCount, nextSetName, onStartNextSet, onExit }: PracticeStatsProps) {
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -49,17 +51,33 @@ export function PracticeStats({ durationSeconds, paltasCount, notesCount, onExit
           </div>
         </div>
 
-        <button
-          onClick={onExit}
-          style={{
-            width: '100%', padding: '18px', borderRadius: '16px',
-            backgroundColor: '#3b82f6', color: '#fff', border: 'none',
-            fontSize: '18px', fontWeight: '800', cursor: 'pointer',
-            boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.4)'
-          }}
-        >
-          BACK TO HOME
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {nextSetName && (
+            <button
+              onClick={onStartNextSet}
+              style={{
+                width: '100%', padding: '18px', borderRadius: '16px',
+                backgroundColor: '#f59e0b', color: '#fff', border: 'none',
+                fontSize: '18px', fontWeight: '900', cursor: 'pointer',
+                boxShadow: '0 10px 15px -3px rgba(245, 158, 11, 0.4)',
+                textTransform: 'uppercase', letterSpacing: '1px'
+              }}
+            >
+              Start {nextSetName} Set
+            </button>
+          )}
+          <button
+            onClick={onExit}
+            style={{
+              width: '100%', padding: '18px', borderRadius: '16px',
+              backgroundColor: '#3b82f6', color: '#fff', border: 'none',
+              fontSize: '18px', fontWeight: '800', cursor: 'pointer',
+              boxShadow: '0 10px 15px -3px rgba(59, 130, 246, 0.4)'
+            }}
+          >
+            BACK TO HOME
+          </button>
+        </div>
       </div>
     </div>
   );
