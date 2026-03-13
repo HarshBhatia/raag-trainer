@@ -70,7 +70,7 @@ export function StartPractice({ onStart, onExit }: StartPracticeProps) {
             onClick={handleManualStart}
             style={{
               width: '180px', height: '180px', borderRadius: '50%',
-              backgroundColor: '#10b981', color: '#fff', border: 'none',
+              backgroundColor: '#10b981', color: '#fff',
               fontSize: '20px', fontWeight: '900', cursor: 'pointer',
               boxShadow: '0 15px 30px -5px rgba(16, 185, 129, 0.4)',
               display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
