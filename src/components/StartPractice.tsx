@@ -47,10 +47,13 @@ export function StartPractice({ onStart, onExit }: StartPracticeProps) {
         <div style={{ 
           marginBottom: '30px', padding: '12px', borderRadius: '12px', 
           backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px'
         }}>
-          <span style={{ fontSize: '20px' }}>🔊</span>
-          <span style={{ fontSize: '13px', fontWeight: '700', color: '#f59e0b' }}>Turn up volume & check Silent Mode</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '20px' }}>🔊</span>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: '#f59e0b' }}>Turn up volume & check Silent Mode</span>
+          </div>
+          {isMobile && <span style={{ fontSize: '10px', color: '#94a3b8' }}>iPhone users: Turn off physical Silent switch</span>}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '40px' }}>

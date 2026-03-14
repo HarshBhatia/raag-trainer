@@ -6,7 +6,7 @@ export type NoteName = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' |
 
 export type EndNote = 'sa' | 'pa' | 'upper-sa';
 
-export type SoundType = 'harmonium' | 'flute' | 'piano' | 'synth';
+export type SoundType = 'harmonium' | 'flute' | 'piano' | 'synth' | 'male_vocal' | 'female_vocal';
 
 export interface Raag {
   name: string;

@@ -1,25 +1,102 @@
-import { TaanNote, SoundType } from '../types';
+import { TaanNote, SoundType, NoteName } from '../types';
+import { noteFrequencies } from './taanGenerator';
 
 export class AudioEngine {
   private audioContext: AudioContext | null = null;
   private isPlaying = false;
   private currentTempo = 120;
   private currentPlaybackId: number = 0;
-  private soundType: SoundType = 'harmonium';
+  private soundType: SoundType = 'piano';
+  private sampleCache: Map<string, AudioBuffer> = new Map();
+  private baseFreq: number = 277.18;
   
   // Tanpura properties
   private tanpuraPlaying = false;
   private tanpuraTimer: any = null;
   private tanpuraGain: GainNode | null = null;
   private currentTanpuraVolume: number = 0.4;
+  private sampledTanpuraAudio: HTMLAudioElement | null = null;
 
-  async initialize() {
+  private tanpuraUrls: Record<string, Record<'Pa' | 'Ma', string>> = {
+    'C': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/c-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/C-Tanpura-B5-SaMa-2021.mp3'
+    },
+    'C#': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/db-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/Db-Tanpura-B5-SaMa-2021.mp3'
+    },
+    'D': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/d-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/D-Tanpura-B5-SaMa-2021.mp3'
+    },
+    'D#': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/eb-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/Eb-Tanpura-B5-SaMa-2021.mp3'
+    },
+    'E': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/e-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/E-Tanpura-B5-SaMa-2021.mp3'
+    },
+    'F': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/f-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/F-Tanpuras-B5-SaMa-2021.mp3'
+    },
+    'F#': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/gb-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/Gb-Tanpura-B5-SaMa-2021.mp3'
+    },
+    'G': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/g-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/G-Tanpura-B5-SaMa-2021.mp3'
+    },
+    'G#': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/ab-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/Ab-Tanpura-B5-SaMa-2021.mp3'
+    },
+    'A': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/a-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/A-Tanpura-B5-SaMa-2021.mp3'
+    },
+    'A#': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/bb-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/Bb-Tanpura-B5-SaMa-2021.mp3'
+    },
+    'B': {
+      'Pa': 'https://ragajunglism.org/wp-content/uploads/2020/03/b-tanpura-thick.mp3',
+      'Ma': 'https://ragajunglism.org/wp-content/uploads/2021/02/B-Tanpura-B5-SaMa-2021.mp3'
+    }
+  };
+
+  async initialize(saNote: NoteName = 'C#') {
+    this.baseFreq = noteFrequencies[saNote] || 277.18;
     if (!this.audioContext) {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
-    if (this.audioContext.state === 'suspended') {
+    // Always check and resume
+    if (this.audioContext.state === 'suspended' || this.audioContext.state === 'interrupted') {
       await this.audioContext.resume();
     }
+  }
+
+  async loadVocalSamples(gender: 'male' | 'female') {
+    if (!this.audioContext) await this.initialize();
+    const swaras = ['S', 'r', 'R', 'g', 'G', 'M', 'm', 'P', 'd', 'D', 'n', 'N'];
+    const promises = swaras.map(async (swara) => {
+      const key = `${gender}_${swara}`;
+      if (this.sampleCache.has(key)) return;
+
+      try {
+        const response = await fetch(`/samples/${gender}/${swara}.mp3`);
+        if (!response.ok) throw new Error(`Failed to load ${swara}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await this.audioContext!.decodeAudioData(arrayBuffer);
+        this.sampleCache.set(key, audioBuffer);
+      } catch (e) {
+        console.warn(`Could not load vocal sample for ${swara}`, e);
+      }
+    });
+    await Promise.all(promises);
   }
 
   setTempo(tempo: number) {
@@ -32,6 +109,9 @@ export class AudioEngine {
 
   setTanpuraVolume(volume: number) {
     this.currentTanpuraVolume = volume;
+    if (this.sampledTanpuraAudio) {
+      this.sampledTanpuraAudio.volume = volume;
+    }
     if (this.tanpuraGain && this.audioContext) {
       this.tanpuraGain.gain.setTargetAtTime(volume, this.audioContext.currentTime, 0.1);
     }
@@ -165,77 +245,76 @@ export class AudioEngine {
     osc.stop(startTime + duration);
   }
 
-  private pluckTanpuraString(frequency: number, startTime: number, volume: number) {
+  private createVocalNote(swara: string, frequency: number, startTime: number, duration: number, volume: number, gender: 'male' | 'female') {
     if (!this.audioContext) return;
+    const key = `${gender}_${swara}`;
+    const buffer = this.sampleCache.get(key);
+    
+    if (!buffer) {
+      this.createSynthNote(frequency, startTime, duration, volume);
+      return;
+    }
+
     const ctx = this.audioContext;
-    const carrier = ctx.createOscillator();
-    const modulator = ctx.createOscillator();
-    const modGain = ctx.createGain();
-    const masterGain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
-    carrier.type = 'sawtooth';
-    carrier.frequency.value = frequency;
-    modulator.type = 'sine';
-    modulator.frequency.value = frequency * 2.01;
-    modGain.gain.value = frequency * 0.5;
-    filter.type = 'lowpass';
-    filter.frequency.value = 2000;
-    filter.Q.value = 1;
-    modulator.connect(modGain);
-    modGain.connect(carrier.frequency);
-    carrier.connect(filter);
-    filter.connect(masterGain);
-    masterGain.connect(this.tanpuraGain || ctx.destination);
-    masterGain.gain.setValueAtTime(0, startTime);
-    masterGain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
-    masterGain.gain.exponentialRampToValueAtTime(0.001, startTime + 3.5);
-    filter.frequency.setValueAtTime(3000, startTime);
-    filter.frequency.exponentialRampToValueAtTime(800, startTime + 2);
-    carrier.start(startTime);
-    modulator.start(startTime);
-    carrier.stop(startTime + 4);
-    modulator.stop(startTime + 4);
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    source.buffer = buffer;
+    
+    const baseSa = gender === 'male' ? 277.18 : 415.30;
+    const swaraRatios: Record<string, number> = {
+      'S': 1.0, 'r': 16/15, 'R': 9/8, 'g': 6/5, 'G': 5/4, 'M': 4/3,
+      'm': 45/32, 'P': 3/2, 'd': 8/5, 'D': 5/3, 'n': 9/5, 'N': 15/8,
+    };
+    
+    // Determine octave relative to current baseFreq
+    let octave = 0;
+    if (frequency > this.baseFreq * 1.8) octave = 1;
+    else if (frequency < this.baseFreq * 0.9) octave = -1;
+
+    const sampleFreq = baseSa * (swaraRatios[swara] || 1.0) * Math.pow(2, octave);
+    source.playbackRate.value = frequency / sampleFreq;
+
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(volume * 1.2, startTime + 0.05);
+    gain.gain.setValueAtTime(volume * 1.2, startTime + duration - 0.05);
+    gain.gain.linearRampToValueAtTime(0, startTime + duration);
+    
+    source.start(startTime);
+    source.stop(startTime + duration);
   }
 
-  startTanpura(baseFreq: number, mode: 'Pa' | 'Ma' | 'Ni' = 'Pa') {
-    if (this.tanpuraPlaying) return;
-    this.initialize().then(() => {
-      if (!this.audioContext) return;
-      const ctx = this.audioContext;
-      this.tanpuraPlaying = true;
-      this.tanpuraGain = ctx.createGain();
-      this.tanpuraGain.gain.value = this.currentTanpuraVolume;
-      this.tanpuraGain.connect(ctx.destination);
-      let string1Freq = baseFreq * 1.5;
-      if (mode === 'Ma') string1Freq = baseFreq * 1.333;
-      if (mode === 'Ni') string1Freq = baseFreq * 1.875;
-      const string2Freq = baseFreq;
-      const string3Freq = baseFreq;
-      const string4Freq = baseFreq * 0.5;
-      let cycle = 0;
-      const step = () => {
-        if (!this.tanpuraPlaying) return;
-        const now = ctx.currentTime;
-        switch(cycle % 4) {
-          case 0: this.pluckTanpuraString(string1Freq, now, 0.15); break;
-          case 1: this.pluckTanpuraString(string2Freq, now + 0.1, 0.12); break;
-          case 2: this.pluckTanpuraString(string3Freq, now + 0.2, 0.12); break;
-          case 3: this.pluckTanpuraString(string4Freq, now + 0.3, 0.18); break;
-        }
-        cycle++;
-        this.tanpuraTimer = setTimeout(step, 1200);
-      };
-      step();
-    });
+
+  startTanpura(baseFreqName: string, mode: 'Pa' | 'Ma' | 'Ni' = 'Pa') {
+    if (this.tanpuraPlaying) {
+      this.stopTanpura();
+    }
+    
+    this.tanpuraPlaying = true;
+    const effectiveMode = mode === 'Ma' ? 'Ma' : 'Pa'; // Ni maps to Pa for now
+    const url = this.tanpuraUrls[baseFreqName]?.[effectiveMode];
+
+    if (!url) {
+      console.warn(`No Tanpura sample found for ${baseFreqName} ${mode}`);
+      return;
+    }
+
+    this.sampledTanpuraAudio = new Audio(url);
+    this.sampledTanpuraAudio.loop = true;
+    this.sampledTanpuraAudio.volume = this.currentTanpuraVolume;
+    this.sampledTanpuraAudio.play().catch(e => console.error("Tanpura play failed:", e));
   }
 
   stopTanpura() {
     this.tanpuraPlaying = false;
-    if (this.tanpuraTimer) clearTimeout(this.tanpuraTimer);
-    if (this.tanpuraGain) {
-      const now = this.audioContext?.currentTime || 0;
-      this.tanpuraGain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    if (this.sampledTanpuraAudio) {
+      this.sampledTanpuraAudio.pause();
+      this.sampledTanpuraAudio.currentTime = 0;
+      this.sampledTanpuraAudio = null;
     }
+    if (this.tanpuraTimer) clearTimeout(this.tanpuraTimer);
   }
 
   private playClick(startTime: number, isAccent: boolean) {
@@ -297,6 +376,8 @@ export class AudioEngine {
         case 'flute': this.createFluteNote(note.frequency, now, duration, volume, targetFrequency); break;
         case 'piano': this.createPianoNote(note.frequency, now, duration, volume, targetFrequency); break;
         case 'synth': this.createSynthNote(note.frequency, now, duration, volume, targetFrequency); break;
+        case 'male_vocal': this.createVocalNote(note.swara, note.frequency, now, duration, volume, 'male'); break;
+        case 'female_vocal': this.createVocalNote(note.swara, note.frequency, now, duration, volume, 'female'); break;
         default: this.createHarmoniumNote(note.frequency, now, duration, volume, targetFrequency);
       }
       await new Promise(resolve => setTimeout(resolve, duration * 1000));

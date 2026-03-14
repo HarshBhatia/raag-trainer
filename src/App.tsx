@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Raag, NoteName, Palta, Notation, SoundType } from './types';
-import { PaltaGenerator, thaats, noteFrequencies } from './utils/taanGenerator';
+import { PaltaGenerator, thaats } from './utils/taanGenerator';
 import { AudioEngine } from './utils/audioEngine';
 import { RaagSelector } from './components/RaagSelector';
 import { PaltaDisplay } from './components/PaltaDisplay';
@@ -9,6 +9,7 @@ import { PracticeMode } from './components/PracticeMode';
 import { Onboarding } from './components/Onboarding';
 import { PracticeStats } from './components/PracticeStats';
 import { StartPractice } from './components/StartPractice';
+import { VocalRecorder } from './components/VocalRecorder';
 import { UserPrefs } from './types';
 
 const paltaGenerator = new PaltaGenerator('C#');
@@ -42,12 +43,12 @@ function App() {
   const [currentNoteIndex, setCurrentNoteIndex] = useState(-1);
   const [currentRepetition, setCurrentRepetition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackId, setPlaybackId] = useState(0);
   const [isPracticeMode, setIsPracticeMode] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showStartPrompt, setShowStartPrompt] = useState(false);
   const [introBeat, setIntroBeat] = useState(0);
   const [showPaltaList, setShowPaltaList] = useState(false);
+  const [showRecorder, setShowRecorder] = useState(false);
   
   const [playbackMode, setPlaybackMode] = useState<'loop' | 'sequential' | null>(null);
   const isAutoSwitching = useRef(false);
@@ -179,6 +180,11 @@ function App() {
 
   useEffect(() => {
     audioEngine.setSoundType(soundType);
+    if (soundType === 'male_vocal') {
+      audioEngine.loadVocalSamples('male');
+    } else if (soundType === 'female_vocal') {
+      audioEngine.loadVocalSamples('female');
+    }
   }, [soundType]);
 
   useEffect(() => {
@@ -187,10 +193,9 @@ function App() {
 
   useEffect(() => {
     if (isTanpuraPlaying) {
-      const freq = noteFrequencies[saNote];
       const hasPa = selectedThaat.aroha.includes('P');
       const mode = hasPa ? 'Pa' : 'Ma';
-      audioEngine.startTanpura(freq, mode);
+      audioEngine.startTanpura(saNote, mode);
     } else {
       audioEngine.stopTanpura();
     }
@@ -232,6 +237,7 @@ function App() {
       completedPaltasCount.current = 0;
     }
 
+    audioEngine.initialize(saNote);
     audioEngine.start();
     const playbackId = ++currentPlaybackIdRef.current;
 
@@ -308,13 +314,13 @@ function App() {
     if (!selectedPalta) return;
     setPlaybackMode('loop');
     isAutoSwitching.current = false;
-    const currentId = playbackId + 1;
-    setPlaybackId(currentId);
+    const currentId = ++currentPlaybackIdRef.current;
     setIsPlaying(true);
+    audioEngine.initialize(saNote);
     audioEngine.start();
     const groupSize = getGroupSize(selectedPalta.pattern);
     await audioEngine.playIntro(tempo, setIntroBeat);
-    if (!audioEngine.getIsPlaying()) return;
+    if (!audioEngine.getIsPlaying() || currentPlaybackIdRef.current !== currentId) return;
     const runLoop = async (currentRep: number) => {
       if (!audioEngine.getIsPlaying() || currentPlaybackIdRef.current !== currentId) return;
       setCurrentRepetition(((currentRep - 1) % repetitions) + 1);
@@ -573,14 +579,23 @@ function App() {
             className="hero-button"
             onClick={() => {
               handleStop();
-              // Resuming only works for 'All' set
-              if (selectedCategory !== 'All' && visiblePaltas.length > 0) {
-                setCurrentPaltaId(visiblePaltas[0].id);
-              }
               setShowStartPrompt(true);
             }}
           >
             <span>▶</span> PRACTICE
+          </button>
+
+          <button
+            onClick={() => setShowRecorder(!showRecorder)}
+            style={{
+              width: '100%', padding: '12px', borderRadius: '12px',
+              backgroundColor: showRecorder ? '#0f172a' : '#f1f5f9',
+              color: showRecorder ? '#fff' : '#64748b',
+              border: '1px solid #e2e8f0', cursor: 'pointer',
+              fontWeight: '700', fontSize: '12px'
+            }}
+          >
+            {showRecorder ? 'Close Sample Recorder' : 'Open Sample Recorder'}
           </button>
 
           <div className="card">
@@ -677,6 +692,8 @@ function App() {
         </aside>
 
         <main className="palta-list-desktop" style={{ flex: 1, width: '100%' }}>
+          {showRecorder && <VocalRecorder />}
+          
           {visiblePaltas.length > 0 && (
             <PaltaDisplay
               paltas={visiblePaltas}
