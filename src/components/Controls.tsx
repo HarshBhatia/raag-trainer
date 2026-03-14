@@ -100,18 +100,118 @@ export function Controls({
 
         <div>
           <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#475569', fontSize: 'var(--font-xs)', textTransform: 'uppercase' }}>
-            Tempo: {tempo} BPM
+            Tempo
           </label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%' }}>
-             <input
-              type="range"
-              min="40"
-              max="300"
-              step="1"
-              value={tempo}
-              onChange={(e) => onTempoChange(Number(e.target.value))}
-              style={{ width: '100%', accentColor: '#6366f1', cursor: 'pointer', height: '24px' }}
-            />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', width: '100%' }}>
+            <button
+              onClick={() => onTempoChange(Math.max(40, tempo - 10))}
+              style={{
+                padding: '10px 12px',
+                fontSize: 'var(--font-sm)',
+                fontWeight: '700',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#fff',
+                color: '#64748b',
+                cursor: 'pointer',
+                minWidth: '44px'
+              }}
+            >
+              -10
+            </button>
+            <button
+              onClick={() => onTempoChange(Math.max(40, tempo - 5))}
+              style={{
+                padding: '10px 12px',
+                fontSize: 'var(--font-sm)',
+                fontWeight: '700',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#fff',
+                color: '#64748b',
+                cursor: 'pointer',
+                minWidth: '44px'
+              }}
+            >
+              -5
+            </button>
+            <button
+              onClick={() => onTempoChange(Math.max(40, tempo - 1))}
+              style={{
+                padding: '10px 12px',
+                fontSize: 'var(--font-sm)',
+                fontWeight: '700',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#fff',
+                color: '#64748b',
+                cursor: 'pointer',
+                minWidth: '44px'
+              }}
+            >
+              -1
+            </button>
+            <div style={{
+              flex: 1,
+              padding: '10px 16px',
+              fontSize: 'var(--font-lg)',
+              fontWeight: '900',
+              borderRadius: '8px',
+              backgroundColor: '#6366f1',
+              color: '#fff',
+              textAlign: 'center',
+              minWidth: '80px'
+            }}>
+              {tempo}
+            </div>
+            <button
+              onClick={() => onTempoChange(Math.min(300, tempo + 1))}
+              style={{
+                padding: '10px 12px',
+                fontSize: 'var(--font-sm)',
+                fontWeight: '700',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#fff',
+                color: '#64748b',
+                cursor: 'pointer',
+                minWidth: '44px'
+              }}
+            >
+              +1
+            </button>
+            <button
+              onClick={() => onTempoChange(Math.min(300, tempo + 5))}
+              style={{
+                padding: '10px 12px',
+                fontSize: 'var(--font-sm)',
+                fontWeight: '700',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#fff',
+                color: '#64748b',
+                cursor: 'pointer',
+                minWidth: '44px'
+              }}
+            >
+              +5
+            </button>
+            <button
+              onClick={() => onTempoChange(Math.min(300, tempo + 10))}
+              style={{
+                padding: '10px 12px',
+                fontSize: 'var(--font-sm)',
+                fontWeight: '700',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                backgroundColor: '#fff',
+                color: '#64748b',
+                cursor: 'pointer',
+                minWidth: '44px'
+              }}
+            >
+              +10
+            </button>
           </div>
         </div>
 
