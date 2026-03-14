@@ -32,7 +32,7 @@ function App() {
   const [notation, setNotation] = useState<Notation>(savedPrefs.notation || 'hindi');
   const [soundType, setSoundType] = useState<SoundType>(savedPrefs.soundType || 'piano');
   const [isTanpuraPlaying, setIsTanpuraPlaying] = useState(savedPrefs.isTanpuraPlaying || false);
-  const [tanpuraVolume, setTanpuraVolume] = useState(savedPrefs.tanpuraVolume !== undefined ? savedPrefs.tanpuraVolume : 0.4);
+  const [tanpuraVolume, setTanpuraVolume] = useState(savedPrefs.tanpuraVolume !== undefined ? savedPrefs.tanpuraVolume : 0.25);
   const [tanpuraMode, setTanpuraMode] = useState<'Pa' | 'Ma'>(savedPrefs.tanpuraMode || 'Pa');
   const [selectedCategory, setSelectedCategory] = useState<string>(savedPrefs.selectedCategory || '1. Basic Alankars');
   const [enableGlide, setEnableGlide] = useState(savedPrefs.enableGlide || false);
@@ -923,8 +923,49 @@ function App() {
                 <input
                   type="range" min="0" max="1" step="0.01" value={tanpuraVolume}
                   onChange={(e) => setTanpuraVolume(parseFloat(e.target.value))}
-                  style={{ width: '100%', accentColor: '#6366f1', height: '40px' }}
+                  onInput={(e) => setTanpuraVolume(parseFloat((e.target as HTMLInputElement).value))}
+                  style={{ 
+                    width: '100%', 
+                    accentColor: '#6366f1', 
+                    height: '40px',
+                    WebkitAppearance: 'none',
+                    appearance: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer'
+                  }}
                 />
+                <style>{`
+                  input[type="range"]::-webkit-slider-track {
+                    width: 100%;
+                    height: 8px;
+                    background: #e2e8f0;
+                    border-radius: 4px;
+                  }
+                  input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 24px;
+                    height: 24px;
+                    background: #6366f1;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    margin-top: -8px;
+                  }
+                  input[type="range"]::-moz-range-track {
+                    width: 100%;
+                    height: 8px;
+                    background: #e2e8f0;
+                    border-radius: 4px;
+                  }
+                  input[type="range"]::-moz-range-thumb {
+                    width: 24px;
+                    height: 24px;
+                    background: #6366f1;
+                    border-radius: 50%;
+                    cursor: pointer;
+                    border: none;
+                  }
+                `}</style>
               </div>
 
               <button
