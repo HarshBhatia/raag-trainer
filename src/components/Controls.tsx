@@ -1,5 +1,6 @@
 import { NoteName, Notation, SoundType } from '../types';
 import { noteFrequencies } from '../utils/taanGenerator';
+import { VolumeSlider } from './VolumeSlider';
 import { useState } from 'react';
 
 interface ControlsProps {
@@ -260,12 +261,9 @@ export function Controls({  tempo,
                   >Sa-{mode}</button>
                 ))}
               </div>
-              <input
-                type="range" min="0" max="100" step="1" value={Math.round(tanpuraVolume * 100)}
-                onChange={(e) => onTanpuraVolumeChange(parseInt(e.target.value) / 100)}
-                onInput={(e) => onTanpuraVolumeChange(parseInt((e.target as HTMLInputElement).value) / 100)}
-                onTouchMove={(e) => onTanpuraVolumeChange(parseInt((e.target as HTMLInputElement).value) / 100)}
-                style={{ width: '100%', accentColor: '#6366f1', touchAction: 'none' }}
+              <VolumeSlider
+                value={tanpuraVolume}
+                onChange={onTanpuraVolumeChange}
               />
             </>
           )}

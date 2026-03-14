@@ -9,6 +9,7 @@ import { PracticeMode } from './components/PracticeMode';
 import { Onboarding } from './components/Onboarding';
 import { PracticeStats } from './components/PracticeStats';
 import { StartPractice } from './components/StartPractice';
+import { VolumeSlider } from './components/VolumeSlider';
 import { UserPrefs } from './types';
 import tanpuraIcon from './assets/tanpura.svg';
 
@@ -941,55 +942,13 @@ function App() {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#475569', fontSize: '11px', textTransform: 'uppercase' }}>Volume: {Math.round(tanpuraVolume * 100)}%</label>
-                <div
-                  ref={(el) => {
-                    if (!el) return;
-                    // Attach non-passive touch listener directly for iOS
-                    const handler = (e: TouchEvent) => {
-                      e.preventDefault();
-                      const rect = el.getBoundingClientRect();
-                      const update = (clientX: number) => {
-                        const pct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-                        setTanpuraVolume(pct);
-                        audioEngine.setTanpuraVolume(pct);
-                      };
-                      update(e.touches[0].clientX);
-                      const onMove = (ev: TouchEvent) => { ev.preventDefault(); update(ev.touches[0].clientX); };
-                      const onEnd = () => { window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd); };
-                      window.addEventListener('touchmove', onMove, { passive: false });
-                      window.addEventListener('touchend', onEnd);
-                    };
-                    el.addEventListener('touchstart', handler, { passive: false });
+                <VolumeSlider
+                  value={tanpuraVolume}
+                  onChange={(v) => {
+                    setTanpuraVolume(v);
+                    audioEngine.setTanpuraVolume(v);
                   }}
-                  style={{ position: 'relative', height: '44px', display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
-                  onMouseDown={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const update = (clientX: number) => {
-                      const pct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-                      setTanpuraVolume(pct);
-                      audioEngine.setTanpuraVolume(pct);
-                    };
-                    update(e.clientX);
-                    const onMove = (ev: MouseEvent) => update(ev.clientX);
-                    const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
-                    window.addEventListener('mousemove', onMove);
-                    window.addEventListener('mouseup', onUp);
-                  }}
-                >
-                  <div style={{ position: 'absolute', left: 0, right: 0, height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px' }}>
-                    <div style={{ width: `${tanpuraVolume * 100}%`, height: '100%', backgroundColor: '#6366f1', borderRadius: '3px' }} />
-                  </div>
-                  <div style={{
-                    position: 'absolute',
-                    left: `calc(${tanpuraVolume * 100}% - 12px)`,
-                    width: '24px', height: '24px',
-                    backgroundColor: '#6366f1',
-                    borderRadius: '50%',
-                    boxShadow: '0 2px 6px rgba(99,102,241,0.5)',
-                    border: '2px solid #fff',
-                    pointerEvents: 'none'
-                  }} />
-                </div>
+                />
               </div>
 
               <button
