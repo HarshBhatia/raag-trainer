@@ -26,6 +26,7 @@ function App() {
     return saved || thaats[0];
   });
   const [tempo, setTempo] = useState(savedPrefs.tempo || (savedPrefs.onboarding?.experience === 'beginner' ? 80 : savedPrefs.onboarding?.experience === 'intermediate' ? 120 : 160));
+  const tempoRef = useRef(tempo);
   const [saNote, setSaNote] = useState<NoteName>(savedPrefs.saNote || (savedPrefs.onboarding?.gender === 'male' ? 'C#' : 'G#'));
   const [repetitions, setRepetitions] = useState(savedPrefs.repetitions || 2);
   const [loop] = useState(savedPrefs.loop !== undefined ? savedPrefs.loop : false);
@@ -65,6 +66,11 @@ function App() {
 
   // Real-time timer state
   const [dynamicTimeRemaining, setDynamicTimeRemaining] = useState(0);
+
+  // Keep tempoRef in sync with tempo state
+  useEffect(() => {
+    tempoRef.current = tempo;
+  }, [tempo]);
 
   useEffect(() => {
     const prefs = {
@@ -252,7 +258,7 @@ function App() {
       
       const groupSize = getGroupSize(palta.pattern);
       
-      await audioEngine.playIntro(tempo, (beat) => {
+      await audioEngine.playIntro(tempoRef.current, (beat) => {
         if (playbackId === currentPlaybackIdRef.current && !skipRequested.current) {
           setIntroBeat(beat);
         }
@@ -268,7 +274,7 @@ function App() {
       for (let rep = 0; rep < repetitions; rep++) {
         if (playbackId !== currentPlaybackIdRef.current || skipRequested.current) break;
         setCurrentRepetition(rep + 1);
-        await audioEngine.playTaan(palta.notes, tempo, groupSize, (index) => {
+        await audioEngine.playTaan(palta.notes, tempoRef.current, groupSize, (index) => {
           if (playbackId === currentPlaybackIdRef.current && !skipRequested.current) {
             setCurrentNoteIndex(index);
             if (index !== -1) totalNotesPlayed.current += 1;
@@ -314,12 +320,12 @@ function App() {
     audioEngine.initialize();
     audioEngine.start();
     const groupSize = getGroupSize(selectedPalta.pattern);
-    await audioEngine.playIntro(tempo, setIntroBeat);
+    await audioEngine.playIntro(tempoRef.current, setIntroBeat);
     if (!audioEngine.getIsPlaying() || currentPlaybackIdRef.current !== currentId) return;
     const runLoop = async (currentRep: number) => {
       if (!audioEngine.getIsPlaying() || currentPlaybackIdRef.current !== currentId) return;
       setCurrentRepetition(((currentRep - 1) % repetitions) + 1);
-      await audioEngine.playTaan(selectedPalta.notes, tempo, groupSize, (index) => {
+      await audioEngine.playTaan(selectedPalta.notes, tempoRef.current, groupSize, (index) => {
         if (currentPlaybackIdRef.current === currentId) {
           setCurrentNoteIndex(index);
         }
