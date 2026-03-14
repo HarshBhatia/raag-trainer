@@ -9,7 +9,6 @@ import { PracticeMode } from './components/PracticeMode';
 import { Onboarding } from './components/Onboarding';
 import { PracticeStats } from './components/PracticeStats';
 import { StartPractice } from './components/StartPractice';
-import { VocalRecorder } from './components/VocalRecorder';
 import { UserPrefs } from './types';
 import tanpuraIcon from './assets/tanpura.svg';
 
@@ -50,7 +49,6 @@ function App() {
   const [showStartPrompt, setShowStartPrompt] = useState(false);
   const [introBeat, setIntroBeat] = useState(0);
   const [showPaltaList, setShowPaltaList] = useState(false);
-  const [showRecorder, setShowRecorder] = useState(false);
   const [currentTab, setCurrentTab] = useState<'practice' | 'tanpura'>('practice');
   
   const [playbackMode, setPlaybackMode] = useState<'loop' | 'sequential' | null>(null);
@@ -184,11 +182,6 @@ function App() {
 
   useEffect(() => {
     audioEngine.setSoundType(soundType);
-    if (soundType === 'male_vocal') {
-      audioEngine.loadVocalSamples('male');
-    } else if (soundType === 'female_vocal') {
-      audioEngine.loadVocalSamples('female');
-    }
   }, [soundType]);
 
   useEffect(() => {
@@ -239,7 +232,7 @@ function App() {
       completedPaltasCount.current = 0;
     }
 
-    audioEngine.initialize(saNote);
+    audioEngine.initialize();
     audioEngine.start();
     const playbackId = ++currentPlaybackIdRef.current;
 
@@ -318,7 +311,7 @@ function App() {
     isAutoSwitching.current = false;
     const currentId = ++currentPlaybackIdRef.current;
     setIsPlaying(true);
-    audioEngine.initialize(saNote);
+    audioEngine.initialize();
     audioEngine.start();
     const groupSize = getGroupSize(selectedPalta.pattern);
     await audioEngine.playIntro(tempo, setIntroBeat);
@@ -750,20 +743,6 @@ function App() {
               PRACTICE
             </button>
 
-            <button
-              onClick={() => setShowRecorder(!showRecorder)}
-              style={{
-                width: '100%', padding: '10px', borderRadius: '12px',
-                backgroundColor: showRecorder ? '#0f172a' : '#fff',
-                color: showRecorder ? '#fff' : '#64748b',
-                border: '1px solid #e2e8f0', cursor: 'pointer',
-                fontWeight: '700', fontSize: 'var(--font-xs)',
-                textTransform: 'uppercase', letterSpacing: '0.5px'
-              }}
-            >
-              {showRecorder ? 'Close Sample Recorder' : 'Open Sample Recorder'}
-            </button>
-
             <div className="card" style={{ padding: '16px' }}>
               <label style={{ display: 'block', marginBottom: '8px', fontWeight: '800', color: '#475569', fontSize: 'var(--font-xs)', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Select Practice Set
@@ -860,8 +839,6 @@ function App() {
           </aside>
 
           <main className="palta-list-desktop">
-            {showRecorder && <VocalRecorder />}
-            
             {visiblePaltas.length > 0 && (
               <PaltaDisplay
                 paltas={visiblePaltas}

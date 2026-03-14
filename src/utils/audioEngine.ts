@@ -1,5 +1,4 @@
-import { TaanNote, SoundType, NoteName } from '../types';
-import { noteFrequencies } from './taanGenerator';
+import { TaanNote, SoundType } from '../types';
 
 export class AudioEngine {
   private audioContext: AudioContext | null = null;
@@ -7,8 +6,6 @@ export class AudioEngine {
   private currentTempo = 120;
   private currentPlaybackId: number = 0;
   private soundType: SoundType = 'piano';
-  private sampleCache: Map<string, AudioBuffer> = new Map();
-  private baseFreq: number = 277.18;
   
   // Tanpura properties
   private tanpuraPlaying = false;
@@ -68,8 +65,7 @@ export class AudioEngine {
     }
   };
 
-  async initialize(saNote: NoteName = 'C#') {
-    this.baseFreq = noteFrequencies[saNote] || 277.18;
+  async initialize() {
     if (!this.audioContext) {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
@@ -77,36 +73,6 @@ export class AudioEngine {
     if (this.audioContext.state === 'suspended' || this.audioContext.state === 'interrupted') {
       await this.audioContext.resume();
     }
-  }
-
-  async loadVocalSamples(gender: 'male' | 'female') {
-    if (!this.audioContext) await this.initialize();
-    const swaras = ['S', 'r', 'R', 'g', 'G', 'M', 'm', 'P', 'd', 'D', 'n', 'N'];
-    const promises = swaras.map(async (swara) => {
-      const key = `${gender}_${swara}`;
-      if (this.sampleCache.has(key)) return;
-
-      try {
-        const response = await fetch(`/samples/${gender}/${swara}.mp3`);
-        if (!response.ok) return; // Silently fail if file not found
-        
-        const arrayBuffer = await response.arrayBuffer();
-        if (arrayBuffer.byteLength === 0) return;
-
-        // Ensure ctx is still valid
-        if (!this.audioContext) return;
-
-        try {
-          const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-          this.sampleCache.set(key, audioBuffer);
-        } catch (decodeErr) {
-          console.warn(`Failed to decode ${swara} for ${gender}`, decodeErr);
-        }
-      } catch (e) {
-        // Just skip if fetch fails
-      }
-    });
-    await Promise.all(promises);
   }
 
   setTempo(tempo: number) {
@@ -273,48 +239,6 @@ export class AudioEngine {
     osc.stop(startTime + duration);
   }
 
-  private createVocalNote(swara: string, frequency: number, startTime: number, duration: number, volume: number, gender: 'male' | 'female') {
-    if (!this.audioContext) return;
-    const key = `${gender}_${swara}`;
-    const buffer = this.sampleCache.get(key);
-    
-    if (!buffer) {
-      this.createSynthNote(frequency, startTime, duration, volume);
-      return;
-    }
-
-    const ctx = this.audioContext;
-    const source = ctx.createBufferSource();
-    const gain = ctx.createGain();
-    source.buffer = buffer;
-    
-    const baseSa = gender === 'male' ? 277.18 : 415.30;
-    const swaraRatios: Record<string, number> = {
-      'S': 1.0, 'r': 16/15, 'R': 9/8, 'g': 6/5, 'G': 5/4, 'M': 4/3,
-      'm': 45/32, 'P': 3/2, 'd': 8/5, 'D': 5/3, 'n': 9/5, 'N': 15/8,
-    };
-    
-    // Determine octave relative to current baseFreq
-    let octave = 0;
-    if (frequency > this.baseFreq * 1.8) octave = 1;
-    else if (frequency < this.baseFreq * 0.9) octave = -1;
-
-    const sampleFreq = baseSa * (swaraRatios[swara] || 1.0) * Math.pow(2, octave);
-    source.playbackRate.value = frequency / sampleFreq;
-
-    source.connect(gain);
-    gain.connect(ctx.destination);
-    
-    gain.gain.setValueAtTime(0, startTime);
-    gain.gain.linearRampToValueAtTime(volume * 1.2, startTime + 0.05);
-    gain.gain.setValueAtTime(volume * 1.2, startTime + duration - 0.05);
-    gain.gain.linearRampToValueAtTime(0, startTime + duration);
-    
-    source.start(startTime);
-    source.stop(startTime + duration);
-  }
-
-
   startTanpura(baseFreqName: string, mode: 'Pa' | 'Ma' | 'Ni' = 'Pa') {
     if (this.tanpuraPlaying) {
       this.stopTanpura();
@@ -404,8 +328,6 @@ export class AudioEngine {
         case 'flute': this.createFluteNote(note.frequency, now, duration, volume, targetFrequency); break;
         case 'piano': this.createPianoNote(note.frequency, now, duration, volume, targetFrequency); break;
         case 'synth': this.createSynthNote(note.frequency, now, duration, volume, targetFrequency); break;
-        case 'male_vocal': this.createVocalNote(note.swara, note.frequency, now, duration, volume, 'male'); break;
-        case 'female_vocal': this.createVocalNote(note.swara, note.frequency, now, duration, volume, 'female'); break;
         default: this.createHarmoniumNote(note.frequency, now, duration, volume, targetFrequency);
       }
       await new Promise(resolve => setTimeout(resolve, duration * 1000));

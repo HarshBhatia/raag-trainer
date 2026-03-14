@@ -58,9 +58,7 @@ export function Controls({
     harmonium: 'Harmonium',
     flute: 'Flute',
     piano: 'Piano',
-    synth: 'Synth',
-    male_vocal: 'Male Vocal (Sampled)',
-    female_vocal: 'Female Vocal (Sampled)'
+    synth: 'Synth'
   };
 
   return (
