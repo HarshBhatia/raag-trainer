@@ -27,8 +27,7 @@ interface ControlsProps {
   onResetToDefaults: () => void;
 }
 
-export function Controls({
-  tempo,
+export function Controls({  tempo,
   onTempoChange,
   saNote,
   onSaNoteChange,
@@ -52,6 +51,8 @@ export function Controls({
   onResetToDefaults
 }: ControlsProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [editingTempo, setEditingTempo] = useState(false);
+  const [tempoInput, setTempoInput] = useState('');
   const noteNames = Object.keys(noteFrequencies) as NoteName[];
 
   const instrumentNames: Record<SoundType, string> = {
@@ -135,51 +136,57 @@ export function Controls({
             >
               -5
             </button>
-            <button
-              onClick={() => onTempoChange(Math.max(40, tempo - 1))}
-              style={{
-                padding: '10px 12px',
-                fontSize: 'var(--font-sm)',
-                fontWeight: '700',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: '#fff',
-                color: '#64748b',
-                cursor: 'pointer',
-                minWidth: '44px'
-              }}
-            >
-              -1
-            </button>
-            <div style={{
-              flex: 1,
-              padding: '10px 16px',
-              fontSize: 'var(--font-lg)',
-              fontWeight: '900',
-              borderRadius: '8px',
-              backgroundColor: '#6366f1',
-              color: '#fff',
-              textAlign: 'center',
-              minWidth: '80px'
-            }}>
-              {tempo}
-            </div>
-            <button
-              onClick={() => onTempoChange(Math.min(300, tempo + 1))}
-              style={{
-                padding: '10px 12px',
-                fontSize: 'var(--font-sm)',
-                fontWeight: '700',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: '#fff',
-                color: '#64748b',
-                cursor: 'pointer',
-                minWidth: '44px'
-              }}
-            >
-              +1
-            </button>
+            {editingTempo ? (
+              <input
+                type="number"
+                min="40"
+                max="300"
+                autoFocus
+                value={tempoInput}
+                onChange={(e) => setTempoInput(e.target.value)}
+                onBlur={() => {
+                  const val = parseInt(tempoInput);
+                  if (!isNaN(val)) onTempoChange(Math.min(300, Math.max(40, val)));
+                  setEditingTempo(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                  if (e.key === 'Escape') setEditingTempo(false);
+                }}
+                style={{
+                  flex: 1,
+                  padding: '10px 8px',
+                  fontSize: 'var(--font-lg)',
+                  fontWeight: '900',
+                  borderRadius: '8px',
+                  backgroundColor: '#6366f1',
+                  color: '#fff',
+                  textAlign: 'center',
+                  minWidth: '80px',
+                  border: '2px solid #818cf8',
+                  outline: 'none'
+                }}
+              />
+            ) : (
+              <div
+                onClick={() => { setTempoInput(String(tempo)); setEditingTempo(true); }}
+                style={{
+                  flex: 1,
+                  padding: '10px 8px',
+                  fontSize: 'var(--font-lg)',
+                  fontWeight: '900',
+                  borderRadius: '8px',
+                  backgroundColor: '#6366f1',
+                  color: '#fff',
+                  textAlign: 'center',
+                  minWidth: '80px',
+                  cursor: 'text',
+                  userSelect: 'none'
+                }}
+              >
+                {tempo} <span style={{ fontSize: 'var(--font-xs)', fontWeight: '600', opacity: 0.8 }}>BPM</span>
+              </div>
+            )}
             <button
               onClick={() => onTempoChange(Math.min(300, tempo + 5))}
               style={{
