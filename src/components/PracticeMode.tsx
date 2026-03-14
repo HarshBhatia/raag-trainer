@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Palta, Swara, Notation } from '../types';
-import tanpuraIcon from '../assets/tanpura.svg';
 
 interface PracticeModeProps {
   palta: Palta;
