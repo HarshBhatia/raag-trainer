@@ -11,7 +11,7 @@ export class AudioEngine {
   private tanpuraPlaying = false;
   private tanpuraTimer: any = null;
   private tanpuraGain: GainNode | null = null;
-  private currentTanpuraVolume: number = 0.25;
+  private currentTanpuraVolume: number = 0.20;
   private sampledTanpuraAudio: HTMLAudioElement | null = null;
 
   private tanpuraUrls: Record<string, Record<'Pa' | 'Ma', string>> = {

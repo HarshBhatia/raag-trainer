@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Palta, Swara, Notation } from '../types';
 
 interface PracticeModeProps {
@@ -152,15 +152,28 @@ export function PracticeMode({
 
   // Track played notes (including index 0)
   useEffect(() => {
-    if (currentNoteIndex >= 0 || currentNoteIndex === 0) {
-      setPlayedNotes(prev => new Set(prev).add(currentNoteIndex));
+    if (currentNoteIndex >= 0) {
+      setPlayedNotes(prev => {
+        const newSet = new Set(prev);
+        newSet.add(currentNoteIndex);
+        return newSet;
+      });
     }
   }, [currentNoteIndex]);
 
   // Reset played notes when palta changes, when restarting, or on new repetition
+  // Use a ref to track the last repetition to avoid race conditions
+  const lastRepetitionRef = useRef(currentRepetition);
+  useEffect(() => {
+    if (lastRepetitionRef.current !== currentRepetition) {
+      setPlayedNotes(new Set());
+      lastRepetitionRef.current = currentRepetition;
+    }
+  }, [currentRepetition]);
+
   useEffect(() => {
     setPlayedNotes(new Set());
-  }, [palta.id, currentIndex, currentRepetition]);
+  }, [palta.id, currentIndex]);
 
   useEffect(() => {
     if (currentIndex > 1) {

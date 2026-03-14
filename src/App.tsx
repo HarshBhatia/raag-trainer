@@ -33,7 +33,7 @@ function App() {
   const [notation, setNotation] = useState<Notation>(savedPrefs.notation || 'hindi');
   const [soundType, setSoundType] = useState<SoundType>(savedPrefs.soundType || 'piano');
   const [isTanpuraPlaying, setIsTanpuraPlaying] = useState(savedPrefs.isTanpuraPlaying || false);
-  const [tanpuraVolume, setTanpuraVolume] = useState(savedPrefs.tanpuraVolume !== undefined ? savedPrefs.tanpuraVolume : 0.25);
+  const [tanpuraVolume, setTanpuraVolume] = useState(savedPrefs.tanpuraVolume !== undefined ? savedPrefs.tanpuraVolume : 0.20);
   const [tanpuraMode, setTanpuraMode] = useState<'Pa' | 'Ma'>(savedPrefs.tanpuraMode || 'Pa');
   const [selectedCategory, setSelectedCategory] = useState<string>(savedPrefs.selectedCategory || '1. Basic Alankars');
   const [enableGlide, setEnableGlide] = useState(savedPrefs.enableGlide || false);
@@ -232,6 +232,11 @@ function App() {
     setPlaybackMode('sequential');
     setIsPlaying(true);
     
+    // Auto-start tanpura in practice mode
+    if (!isTanpuraPlaying) {
+      setIsTanpuraPlaying(true);
+    }
+    
     if (!sessionStartTime.current) {
       sessionStartTime.current = Date.now();
       totalNotesPlayed.current = 0;
@@ -317,6 +322,12 @@ function App() {
     isAutoSwitching.current = false;
     const currentId = ++currentPlaybackIdRef.current;
     setIsPlaying(true);
+    
+    // Auto-start tanpura in practice mode
+    if (!isTanpuraPlaying) {
+      setIsTanpuraPlaying(true);
+    }
+    
     audioEngine.initialize();
     audioEngine.start();
     const groupSize = getGroupSize(selectedPalta.pattern);
