@@ -72,8 +72,8 @@ const PracticeNote = React.memo(({
   const getBackgroundColor = () => {
     if (isActive) return activeColor;
     if (hasBeenPlayed) {
-      // Light tint based on whether it's aroha (green) or avaroha (red)
-      return activeColor === '#10b981' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+      // Darker tint based on whether it's aroha (green) or avaroha (red)
+      return activeColor === '#10b981' ? 'rgba(16, 185, 129, 0.35)' : 'rgba(239, 68, 68, 0.35)';
     }
     return '#1e293b';
   };
@@ -150,9 +150,9 @@ export function PracticeMode({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Track played notes
+  // Track played notes (including index 0)
   useEffect(() => {
-    if (currentNoteIndex >= 0) {
+    if (currentNoteIndex >= 0 || currentNoteIndex === 0) {
       setPlayedNotes(prev => new Set(prev).add(currentNoteIndex));
     }
   }, [currentNoteIndex]);
