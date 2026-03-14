@@ -17,6 +17,7 @@
 - Web Audio API (native browser API, no external libraries)
 - Custom AudioEngine class for sound synthesis
 - Real-time audio generation with multiple instrument types
+- Harmonium synthesis using additive synthesis with reed-like characteristics
 - Tanpura drone synthesis using oscillators and modulation
 
 ## State Management

@@ -233,12 +233,22 @@ export function VocalRecorder() {
                       const audio = new Audio(recordings[`${gender}_${swara}`]);
                       audio.play();
                     }}
-                    style={{ flex: 1, padding: '6px', fontSize: '12px', cursor: 'pointer' }}
-                  >▶</button>
+                    style={{ flex: 1, padding: '6px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M8 5v14l11-7z"/>
+                    </svg>
+                  </button>
                   <button 
                     onClick={() => downloadSample(swara)}
-                    style={{ flex: 1, padding: '6px', fontSize: '12px', cursor: 'pointer' }}
-                  >💾</button>
+                    style={{ flex: 1, padding: '6px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                  </button>
                 </div>
               )}
             </div>

@@ -61,13 +61,13 @@ export function RaagSelector({ raags, selectedRaag, onSelect, notation }: RaagSe
 
   return (
     <div style={{ 
-      padding: '20px',
+      padding: '24px',
       backgroundColor: '#fff',
       borderRadius: '16px',
       border: '1px solid #e2e8f0',
       boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
     }}>
-      <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#475569', fontSize: '12px', textTransform: 'uppercase' }}>
+      <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#475569', fontSize: 'var(--font-xs)', textTransform: 'uppercase' }}>
         Select Thaat
       </label>
       <select
@@ -77,8 +77,8 @@ export function RaagSelector({ raags, selectedRaag, onSelect, notation }: RaagSe
           if (raag) onSelect(raag);
         }}
         style={{
-          padding: '10px 12px',
-          fontSize: '15px',
+          padding: '12px 14px',
+          fontSize: 'var(--font-base)',
           borderRadius: '10px',
           border: '1px solid #e2e8f0',
           width: '100%',
@@ -96,7 +96,7 @@ export function RaagSelector({ raags, selectedRaag, onSelect, notation }: RaagSe
       </select>
       <div style={{ 
         marginTop: '16px', 
-        padding: '12px',
+        padding: '14px',
         backgroundColor: '#f8fafc',
         borderRadius: '10px',
         fontSize: '14px', 
@@ -104,15 +104,15 @@ export function RaagSelector({ raags, selectedRaag, onSelect, notation }: RaagSe
         border: '1px solid #f1f5f9'
       }}>
         <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontWeight: '700', color: '#64748b', minWidth: '60px' }}>Aroha:</span> 
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontWeight: '700', color: '#64748b', minWidth: '60px', fontSize: '12px' }}>Aroha:</span> 
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '3px' }}>
             {selectedRaag.aroha.map((s, i) => <span key={i}>{renderSwara(s)}</span>)}
             {renderSwara('S', 1)}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontWeight: '700', color: '#64748b', minWidth: '60px' }}>Avaroha:</span> 
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontWeight: '700', color: '#64748b', minWidth: '60px', fontSize: '12px' }}>Avaroha:</span> 
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '3px' }}>
             {renderSwara('S', 1)}
             {selectedRaag.avaroha.map((s, i) => <span key={i}>{renderSwara(s)}</span>)}
           </div>

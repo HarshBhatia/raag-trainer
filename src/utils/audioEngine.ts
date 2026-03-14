@@ -88,12 +88,22 @@ export class AudioEngine {
 
       try {
         const response = await fetch(`/samples/${gender}/${swara}.mp3`);
-        if (!response.ok) throw new Error(`Failed to load ${swara}`);
+        if (!response.ok) return; // Silently fail if file not found
+        
         const arrayBuffer = await response.arrayBuffer();
-        const audioBuffer = await this.audioContext!.decodeAudioData(arrayBuffer);
-        this.sampleCache.set(key, audioBuffer);
+        if (arrayBuffer.byteLength === 0) return;
+
+        // Ensure ctx is still valid
+        if (!this.audioContext) return;
+
+        try {
+          const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+          this.sampleCache.set(key, audioBuffer);
+        } catch (decodeErr) {
+          console.warn(`Failed to decode ${swara} for ${gender}`, decodeErr);
+        }
       } catch (e) {
-        console.warn(`Could not load vocal sample for ${swara}`, e);
+        // Just skip if fetch fails
       }
     });
     await Promise.all(promises);
@@ -118,47 +128,65 @@ export class AudioEngine {
   }
 
   private createHarmoniumNote(frequency: number, startTime: number, duration: number, volume: number, targetFrequency?: number) {
-    if (!this.audioContext) return;
-    const ctx = this.audioContext;
-    const harmonics = [
-      { ratio: 1.0, amplitude: 1.0 },
-      { ratio: 2.0, amplitude: 0.5 },
-      { ratio: 3.0, amplitude: 0.3 },
-      { ratio: 4.0, amplitude: 0.15 },
-      { ratio: 5.0, amplitude: 0.1 },
-    ];
+      if (!this.audioContext) return;
+      const ctx = this.audioContext;
 
-    const masterGain = ctx.createGain();
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 2500;
-    
-    masterGain.connect(filter);
-    filter.connect(ctx.destination);
+      // Harmonium has a reed-based sound with rich harmonics
+      const harmonics = [
+        { ratio: 1.0, amplitude: 1.0 },      // Fundamental
+        { ratio: 2.0, amplitude: 0.6 },      // 2nd harmonic (octave)
+        { ratio: 3.0, amplitude: 0.4 },      // 3rd harmonic (fifth)
+        { ratio: 4.0, amplitude: 0.25 },     // 4th harmonic
+        { ratio: 5.0, amplitude: 0.15 },     // 5th harmonic
+        { ratio: 6.0, amplitude: 0.1 },      // 6th harmonic
+        { ratio: 7.0, amplitude: 0.08 },     // 7th harmonic
+        { ratio: 8.0, amplitude: 0.05 },     // 8th harmonic
+      ];
 
-    harmonics.forEach(({ ratio, amplitude }) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.setValueAtTime(frequency * ratio, startTime);
-      if (targetFrequency) {
-        // Steeper curve: setTargetAtTime provides a more natural quadratic-like approach
-        // We use a small time constant relative to duration
-        const timeConstant = duration * 0.2; 
-        osc.frequency.setTargetAtTime(targetFrequency * ratio, startTime, timeConstant);
-      }
-      osc.type = 'sine';
-      osc.connect(gain);
-      gain.connect(masterGain);
-      gain.gain.value = amplitude * 0.15;
-      osc.start(startTime);
-      osc.stop(startTime + duration);
-    });
+      const masterGain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
 
-    masterGain.gain.setValueAtTime(0, startTime);
-    masterGain.gain.linearRampToValueAtTime(volume, startTime + 0.05);
-    masterGain.gain.setValueAtTime(volume, startTime + duration - 0.05);
-    masterGain.gain.linearRampToValueAtTime(0, startTime + duration);
-  }
+      // Bandpass filter for reed-like character
+      filter.type = 'bandpass';
+      filter.frequency.value = frequency * 2;
+      filter.Q.value = 1.5;
+
+      masterGain.connect(filter);
+      filter.connect(ctx.destination);
+
+      // Create harmonics with slight detuning for warmth
+      harmonics.forEach(({ ratio, amplitude }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        // Slight detuning for organic sound
+        const detune = (Math.random() - 0.5) * 2;
+        osc.frequency.setValueAtTime(frequency * ratio + detune, startTime);
+        if (targetFrequency) {
+          const timeConstant = duration * 0.2; 
+          osc.frequency.setTargetAtTime(targetFrequency * ratio + detune, startTime, timeConstant);
+        }
+        osc.type = 'sawtooth'; // Sawtooth for reed-like timbre
+
+        osc.connect(gain);
+        gain.connect(masterGain);
+        gain.gain.value = amplitude * 0.12;
+
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      });
+
+      // Envelope: Quick attack, sustained, gentle release
+      masterGain.gain.setValueAtTime(0, startTime);
+      masterGain.gain.linearRampToValueAtTime(volume, startTime + 0.03);
+      masterGain.gain.setValueAtTime(volume * 0.95, startTime + duration - 0.08);
+      masterGain.gain.linearRampToValueAtTime(0, startTime + duration);
+
+      // Filter envelope for brightness
+      filter.frequency.setValueAtTime(frequency * 2, startTime);
+      filter.frequency.linearRampToValueAtTime(frequency * 3, startTime + 0.05);
+      filter.frequency.exponentialRampToValueAtTime(Math.max(frequency * 1.5, 20), startTime + duration);
+    }
 
   private createFluteNote(frequency: number, startTime: number, duration: number, volume: number, targetFrequency?: number) {
     if (!this.audioContext) return;
@@ -367,7 +395,7 @@ export class AudioEngine {
       const isGroupStart = i % groupSize === 0;
       onNoteChange?.(i);
       const now = this.audioContext.currentTime;
-      const volume = isGroupStart ? 0.45 : 0.25; 
+      const volume = isGroupStart ? 0.7 : 0.5; 
       const duration = 60 / (this.currentTempo * 2); 
       
       const targetFrequency = (glide && i < notes.length - 1) ? notes[i + 1].frequency : undefined;
