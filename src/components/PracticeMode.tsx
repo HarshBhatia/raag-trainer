@@ -162,14 +162,14 @@ export function PracticeMode({
   }, [currentNoteIndex]);
 
   // Reset played notes when palta changes, when restarting, or on new repetition
-  // Use a ref to track the last repetition to avoid race conditions
   const lastRepetitionRef = useRef(currentRepetition);
   useEffect(() => {
     if (lastRepetitionRef.current !== currentRepetition && currentRepetition > 0) {
-      setPlayedNotes(new Set());
+      // Clear and immediately re-add current note if it's valid
+      setPlayedNotes(currentNoteIndex >= 0 ? new Set([currentNoteIndex]) : new Set());
       lastRepetitionRef.current = currentRepetition;
     }
-  }, [currentRepetition]);
+  }, [currentRepetition, currentNoteIndex]);
 
   useEffect(() => {
     setPlayedNotes(new Set());

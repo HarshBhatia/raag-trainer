@@ -114,6 +114,53 @@ export function Controls({
             />
           </div>
         </div>
+
+        {/* Tanpura Controls - Moved from More Settings */}
+        <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <button
+            onClick={onTanpuraToggle}
+            style={{
+              width: '100%',
+              padding: '10px',
+              backgroundColor: isTanpuraPlaying ? '#6366f1' : '#fff',
+              color: isTanpuraPlaying ? '#fff' : '#6366f1',
+              border: '1px solid #6366f1',
+              borderRadius: '10px',
+              cursor: 'pointer',
+              fontWeight: '800',
+              fontSize: 'var(--font-xs)',
+              marginBottom: isTanpuraPlaying ? '10px' : '0'
+            }}
+          >
+            TANPURA {isTanpuraPlaying ? 'ON' : 'OFF'}
+          </button>
+          
+          {isTanpuraPlaying && (
+            <>
+              <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
+                {(['Pa', 'Ma'] as const).map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => onTanpuraModeChange(mode)}
+                    style={{
+                      flex: 1, padding: '8px', fontSize: 'var(--font-xs)', fontWeight: '800',
+                      borderRadius: '8px', border: '1px solid #e2e8f0',
+                      backgroundColor: tanpuraMode === mode ? '#6366f1' : '#fff',
+                      color: tanpuraMode === mode ? '#fff' : '#64748b',
+                      cursor: 'pointer',
+                      boxShadow: tanpuraMode === mode ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
+                    }}
+                  >Sa-{mode}</button>
+                ))}
+              </div>
+              <input
+                type="range" min="0" max="1" step="0.01" value={tanpuraVolume}
+                onChange={(e) => onTanpuraVolumeChange(parseFloat(e.target.value))}
+                style={{ width: '100%', accentColor: '#6366f1' }}
+              />
+            </>
+          )}
+        </div>
       </div>
 
       <button
@@ -151,52 +198,6 @@ export function Controls({
                 {enableGlide ? 'ON' : 'OFF'}
               </button>
             </div>
-          </div>
-
-          <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-            <button
-              onClick={onTanpuraToggle}
-              style={{
-                width: '100%',
-                padding: '10px',
-                backgroundColor: isTanpuraPlaying ? '#6366f1' : '#fff',
-                color: isTanpuraPlaying ? '#fff' : '#6366f1',
-                border: '1px solid #6366f1',
-                borderRadius: '10px',
-                cursor: 'pointer',
-                fontWeight: '800',
-                fontSize: 'var(--font-xs)',
-                marginBottom: isTanpuraPlaying ? '10px' : '0'
-              }}
-            >
-              TANPURA {isTanpuraPlaying ? 'ON' : 'OFF'}
-            </button>
-            
-            {isTanpuraPlaying && (
-              <>
-                <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
-                  {(['Pa', 'Ma'] as const).map(mode => (
-                    <button
-                      key={mode}
-                      onClick={() => onTanpuraModeChange(mode)}
-                      style={{
-                        flex: 1, padding: '8px', fontSize: 'var(--font-xs)', fontWeight: '800',
-                        borderRadius: '8px', border: '1px solid #e2e8f0',
-                        backgroundColor: tanpuraMode === mode ? '#6366f1' : '#fff',
-                        color: tanpuraMode === mode ? '#fff' : '#64748b',
-                        cursor: 'pointer',
-                        boxShadow: tanpuraMode === mode ? '0 1px 2px rgba(0,0,0,0.1)' : 'none'
-                      }}
-                    >Sa-{mode}</button>
-                  ))}
-                </div>
-                <input
-                  type="range" min="0" max="1" step="0.01" value={tanpuraVolume}
-                  onChange={(e) => onTanpuraVolumeChange(parseFloat(e.target.value))}
-                  style={{ width: '100%', accentColor: '#6366f1' }}
-                />
-              </>
-            )}
           </div>
 
           {/* Instrument & Notation */}
