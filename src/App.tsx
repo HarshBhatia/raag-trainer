@@ -936,21 +936,26 @@ function App() {
               </div>
 
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#475569', fontSize: '11px', textTransform: 'uppercase' }}>Volume</label>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#475569', fontSize: '11px', textTransform: 'uppercase' }}>Volume: {Math.round(tanpuraVolume * 100)}%</label>
                 <div style={{ position: 'relative', padding: '16px 0' }}>
                   <input
                     type="range" 
                     min="0" 
-                    max="1" 
-                    step="0.01" 
-                    value={tanpuraVolume}
+                    max="100" 
+                    step="1" 
+                    value={Math.round(tanpuraVolume * 100)}
                     onChange={(e) => {
-                      const newVolume = parseFloat(e.target.value);
+                      const newVolume = parseInt(e.target.value) / 100;
                       setTanpuraVolume(newVolume);
                       audioEngine.setTanpuraVolume(newVolume);
                     }}
                     onInput={(e) => {
-                      const newVolume = parseFloat((e.target as HTMLInputElement).value);
+                      const newVolume = parseInt((e.target as HTMLInputElement).value) / 100;
+                      setTanpuraVolume(newVolume);
+                      audioEngine.setTanpuraVolume(newVolume);
+                    }}
+                    onTouchMove={(e) => {
+                      const newVolume = parseInt((e.target as HTMLInputElement).value) / 100;
                       setTanpuraVolume(newVolume);
                       audioEngine.setTanpuraVolume(newVolume);
                     }}
@@ -963,7 +968,8 @@ function App() {
                       background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${tanpuraVolume * 100}%, #e2e8f0 ${tanpuraVolume * 100}%, #e2e8f0 100%)`,
                       borderRadius: '4px',
                       outline: 'none',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      touchAction: 'none'
                     }}
                   />
                 </div>
