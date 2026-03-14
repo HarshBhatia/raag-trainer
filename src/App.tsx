@@ -926,28 +926,38 @@ function App() {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#475569', fontSize: '11px', textTransform: 'uppercase' }}>Volume</label>
-                <input
-                  type="range" min="0" max="1" step="0.01" value={tanpuraVolume}
-                  onChange={(e) => setTanpuraVolume(parseFloat(e.target.value))}
-                  onInput={(e) => setTanpuraVolume(parseFloat((e.target as HTMLInputElement).value))}
-                  style={{ 
-                    width: '100%', 
-                    accentColor: '#6366f1', 
-                    height: '40px',
-                    WebkitAppearance: 'none',
-                    appearance: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer'
-                  }}
-                />
+                <div style={{ position: 'relative', padding: '16px 0' }}>
+                  <input
+                    type="range" 
+                    min="0" 
+                    max="1" 
+                    step="0.01" 
+                    value={tanpuraVolume}
+                    onChange={(e) => {
+                      const newVolume = parseFloat(e.target.value);
+                      setTanpuraVolume(newVolume);
+                      audioEngine.setTanpuraVolume(newVolume);
+                    }}
+                    onInput={(e) => {
+                      const newVolume = parseFloat((e.target as HTMLInputElement).value);
+                      setTanpuraVolume(newVolume);
+                      audioEngine.setTanpuraVolume(newVolume);
+                    }}
+                    className="tanpura-volume-slider"
+                    style={{ 
+                      width: '100%',
+                      height: '8px',
+                      WebkitAppearance: 'none',
+                      appearance: 'none',
+                      background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${tanpuraVolume * 100}%, #e2e8f0 ${tanpuraVolume * 100}%, #e2e8f0 100%)`,
+                      borderRadius: '4px',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  />
+                </div>
                 <style>{`
-                  input[type="range"]::-webkit-slider-track {
-                    width: 100%;
-                    height: 8px;
-                    background: #e2e8f0;
-                    border-radius: 4px;
-                  }
-                  input[type="range"]::-webkit-slider-thumb {
+                  .tanpura-volume-slider::-webkit-slider-thumb {
                     -webkit-appearance: none;
                     appearance: none;
                     width: 24px;
@@ -955,20 +965,19 @@ function App() {
                     background: #6366f1;
                     border-radius: 50%;
                     cursor: pointer;
-                    margin-top: -8px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                   }
-                  input[type="range"]::-moz-range-track {
-                    width: 100%;
-                    height: 8px;
-                    background: #e2e8f0;
-                    border-radius: 4px;
-                  }
-                  input[type="range"]::-moz-range-thumb {
+                  .tanpura-volume-slider::-moz-range-thumb {
                     width: 24px;
                     height: 24px;
                     background: #6366f1;
                     border-radius: 50%;
                     cursor: pointer;
+                    border: none;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                  }
+                  .tanpura-volume-slider::-moz-range-track {
+                    background: transparent;
                     border: none;
                   }
                 `}</style>
