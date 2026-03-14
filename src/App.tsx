@@ -33,7 +33,11 @@ function App() {
   const [notation, setNotation] = useState<Notation>(savedPrefs.notation || 'hindi');
   const [soundType, setSoundType] = useState<SoundType>(savedPrefs.soundType || 'piano');
   const [isTanpuraPlaying, setIsTanpuraPlaying] = useState(savedPrefs.isTanpuraPlaying || false);
-  const [tanpuraVolume, setTanpuraVolume] = useState(savedPrefs.tanpuraVolume !== undefined ? savedPrefs.tanpuraVolume : 0.12);
+  const [tanpuraVolume, setTanpuraVolume] = useState(() => {
+    // Force reset if saved value is too high (legacy)
+    const saved = savedPrefs.tanpuraVolume;
+    return (saved !== undefined && saved <= 0.15) ? saved : 0.08;
+  });
   const [tanpuraMode, setTanpuraMode] = useState<'Pa' | 'Ma'>(savedPrefs.tanpuraMode || 'Pa');
   const [selectedCategory, setSelectedCategory] = useState<string>(savedPrefs.selectedCategory || '1. Basic Alankars');
   const [enableGlide, setEnableGlide] = useState(savedPrefs.enableGlide || false);
@@ -938,7 +942,26 @@ function App() {
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', fontWeight: '700', color: '#475569', fontSize: '11px', textTransform: 'uppercase' }}>Volume: {Math.round(tanpuraVolume * 100)}%</label>
                 <div
-                  style={{ position: 'relative', height: '40px', display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
+                  ref={(el) => {
+                    if (!el) return;
+                    // Attach non-passive touch listener directly for iOS
+                    const handler = (e: TouchEvent) => {
+                      e.preventDefault();
+                      const rect = el.getBoundingClientRect();
+                      const update = (clientX: number) => {
+                        const pct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+                        setTanpuraVolume(pct);
+                        audioEngine.setTanpuraVolume(pct);
+                      };
+                      update(e.touches[0].clientX);
+                      const onMove = (ev: TouchEvent) => { ev.preventDefault(); update(ev.touches[0].clientX); };
+                      const onEnd = () => { window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd); };
+                      window.addEventListener('touchmove', onMove, { passive: false });
+                      window.addEventListener('touchend', onEnd);
+                    };
+                    el.addEventListener('touchstart', handler, { passive: false });
+                  }}
+                  style={{ position: 'relative', height: '44px', display: 'flex', alignItems: 'center', cursor: 'pointer', userSelect: 'none' }}
                   onMouseDown={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
                     const update = (clientX: number) => {
@@ -951,20 +974,6 @@ function App() {
                     const onUp = () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
                     window.addEventListener('mousemove', onMove);
                     window.addEventListener('mouseup', onUp);
-                  }}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const update = (clientX: number) => {
-                      const pct = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-                      setTanpuraVolume(pct);
-                      audioEngine.setTanpuraVolume(pct);
-                    };
-                    update(e.touches[0].clientX);
-                    const onMove = (ev: TouchEvent) => { ev.preventDefault(); update(ev.touches[0].clientX); };
-                    const onEnd = () => { window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd); };
-                    window.addEventListener('touchmove', onMove, { passive: false });
-                    window.addEventListener('touchend', onEnd);
                   }}
                 >
                   <div style={{ position: 'absolute', left: 0, right: 0, height: '6px', backgroundColor: '#e2e8f0', borderRadius: '3px' }}>
