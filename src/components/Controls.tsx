@@ -107,15 +107,15 @@ export function Controls({  tempo,
             <button
               onClick={() => onTempoChange(Math.max(40, tempo - 10))}
               style={{
-                padding: '10px 12px',
-                fontSize: 'var(--font-sm)',
-                fontWeight: '700',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: '#fff',
-                color: '#64748b',
+                width: '42px', height: '42px',
+                fontSize: 'var(--font-xs)',
+                fontWeight: '800',
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: '#fecdd3',
+                color: '#be123c',
                 cursor: 'pointer',
-                minWidth: '44px'
+                flexShrink: 0
               }}
             >
               -10
@@ -123,15 +123,15 @@ export function Controls({  tempo,
             <button
               onClick={() => onTempoChange(Math.max(40, tempo - 5))}
               style={{
-                padding: '10px 12px',
-                fontSize: 'var(--font-sm)',
-                fontWeight: '700',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: '#fff',
-                color: '#64748b',
+                width: '42px', height: '42px',
+                fontSize: 'var(--font-xs)',
+                fontWeight: '800',
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: '#fed7aa',
+                color: '#c2410c',
                 cursor: 'pointer',
-                minWidth: '44px'
+                flexShrink: 0
               }}
             >
               -5
@@ -190,15 +190,15 @@ export function Controls({  tempo,
             <button
               onClick={() => onTempoChange(Math.min(300, tempo + 5))}
               style={{
-                padding: '10px 12px',
-                fontSize: 'var(--font-sm)',
-                fontWeight: '700',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: '#fff',
-                color: '#64748b',
+                width: '42px', height: '42px',
+                fontSize: 'var(--font-xs)',
+                fontWeight: '800',
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: '#bbf7d0',
+                color: '#15803d',
                 cursor: 'pointer',
-                minWidth: '44px'
+                flexShrink: 0
               }}
             >
               +5
@@ -206,15 +206,15 @@ export function Controls({  tempo,
             <button
               onClick={() => onTempoChange(Math.min(300, tempo + 10))}
               style={{
-                padding: '10px 12px',
-                fontSize: 'var(--font-sm)',
-                fontWeight: '700',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0',
-                backgroundColor: '#fff',
-                color: '#64748b',
+                width: '42px', height: '42px',
+                fontSize: 'var(--font-xs)',
+                fontWeight: '800',
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: '#a7f3d0',
+                color: '#065f46',
                 cursor: 'pointer',
-                minWidth: '44px'
+                flexShrink: 0
               }}
             >
               +10
