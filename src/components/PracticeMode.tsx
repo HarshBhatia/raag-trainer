@@ -40,13 +40,15 @@ const isTeevra = (s: Swara) => s === 'm';
 
 const PracticeNote = React.memo(({ 
   note, 
-  isActive, 
+  isActive,
+  hasBeenPlayed,
   activeColor, 
   notation, 
   scaleFactor 
 }: { 
   note: any, 
-  isActive: boolean, 
+  isActive: boolean,
+  hasBeenPlayed: boolean,
   activeColor: string, 
   notation: Notation,
   scaleFactor: number
@@ -66,12 +68,22 @@ const PracticeNote = React.memo(({
   const dotSize = 7 * scaleFactor;
   const teevraHeight = 14 * scaleFactor;
 
+  // Determine background color based on state
+  const getBackgroundColor = () => {
+    if (isActive) return activeColor;
+    if (hasBeenPlayed) {
+      // Light tint based on whether it's aroha (green) or avaroha (red)
+      return activeColor === '#10b981' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+    }
+    return '#1e293b';
+  };
+
   return (
     <div
       style={{
         width: `${width}px`,
         height: `${height}px`,
-        backgroundColor: isActive ? activeColor : '#1e293b',
+        backgroundColor: getBackgroundColor(),
         borderRadius: `${10 * scaleFactor}px`,
         display: 'flex',
         flexDirection: 'column',
@@ -130,12 +142,25 @@ export function PracticeMode({
 }: PracticeModeProps) {
   const [showRestartPrompt, setShowRestartPrompt] = useState(false);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [playedNotes, setPlayedNotes] = useState<Set<number>>(new Set());
   
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Track played notes
+  useEffect(() => {
+    if (currentNoteIndex >= 0) {
+      setPlayedNotes(prev => new Set(prev).add(currentNoteIndex));
+    }
+  }, [currentNoteIndex]);
+
+  // Reset played notes when palta changes or when restarting
+  useEffect(() => {
+    setPlayedNotes(new Set());
+  }, [palta.id, currentIndex]);
 
   useEffect(() => {
     if (currentIndex > 1) {
@@ -311,6 +336,7 @@ export function PracticeMode({
                     key={note.absoluteIndex} 
                     note={note} 
                     isActive={currentNoteIndex === note.absoluteIndex}
+                    hasBeenPlayed={playedNotes.has(note.absoluteIndex)}
                     activeColor={color}
                     notation={notation}
                     scaleFactor={scaleFactor}
