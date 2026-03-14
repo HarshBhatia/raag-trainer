@@ -157,10 +157,10 @@ export function PracticeMode({
     }
   }, [currentNoteIndex]);
 
-  // Reset played notes when palta changes or when restarting
+  // Reset played notes when palta changes, when restarting, or on new repetition
   useEffect(() => {
     setPlayedNotes(new Set());
-  }, [palta.id, currentIndex]);
+  }, [palta.id, currentIndex, currentRepetition]);
 
   useEffect(() => {
     if (currentIndex > 1) {
