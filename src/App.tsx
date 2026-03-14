@@ -546,7 +546,7 @@ function App() {
             border-left: none;
             border-right: none;
             border-bottom: none;
-            padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+            padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
             background: rgba(249, 250, 251, 0.98);
             backdrop-filter: blur(20px);
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
@@ -558,8 +558,8 @@ function App() {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            padding: 8px 16px !important;
+            gap: 2px;
+            padding: 6px 16px !important;
             font-size: 10px !important;
             background: transparent !important;
             border-radius: 0 !important;
@@ -572,7 +572,7 @@ function App() {
             color: #94a3b8 !important;
           }
           .tab-icon {
-            font-size: 24px;
+            font-size: 20px;
             display: block;
           }
           .tab-label {
