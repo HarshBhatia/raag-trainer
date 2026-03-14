@@ -463,14 +463,15 @@ export function PracticeMode({
         </div>
       </div>
 
-      {/* Set Name Bar (Separate line on mobile for readability) */}
+      {/* Set Name Bar */}
       <div style={{ 
-        width: '100%', padding: isMobile ? '8px 16px' : '0', 
-        display: isMobile ? 'block' : 'none', 
+        width: '100%', 
+        padding: isMobile ? '8px 16px' : '12px 30px', 
+        display: 'block', 
         backgroundColor: 'rgba(30, 41, 59, 0.3)',
         borderBottom: '1px solid #1e293b'
       }}>
-        <h2 style={{ fontSize: '13px', margin: 0, color: '#94a3b8', fontWeight: '700', textAlign: 'center' }}>
+        <h2 style={{ fontSize: isMobile ? '13px' : '15px', margin: 0, color: '#94a3b8', fontWeight: '700', textAlign: 'center' }}>
           {category} • {thaatName} • {saNote}
         </h2>
       </div>
