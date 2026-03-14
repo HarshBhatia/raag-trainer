@@ -165,7 +165,7 @@ export function PracticeMode({
   // Use a ref to track the last repetition to avoid race conditions
   const lastRepetitionRef = useRef(currentRepetition);
   useEffect(() => {
-    if (lastRepetitionRef.current !== currentRepetition) {
+    if (lastRepetitionRef.current !== currentRepetition && currentRepetition > 0) {
       setPlayedNotes(new Set());
       lastRepetitionRef.current = currentRepetition;
     }
@@ -173,6 +173,7 @@ export function PracticeMode({
 
   useEffect(() => {
     setPlayedNotes(new Set());
+    lastRepetitionRef.current = currentRepetition;
   }, [palta.id, currentIndex]);
 
   useEffect(() => {

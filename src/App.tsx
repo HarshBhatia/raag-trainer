@@ -33,7 +33,7 @@ function App() {
   const [notation, setNotation] = useState<Notation>(savedPrefs.notation || 'hindi');
   const [soundType, setSoundType] = useState<SoundType>(savedPrefs.soundType || 'piano');
   const [isTanpuraPlaying, setIsTanpuraPlaying] = useState(savedPrefs.isTanpuraPlaying || false);
-  const [tanpuraVolume, setTanpuraVolume] = useState(savedPrefs.tanpuraVolume !== undefined ? savedPrefs.tanpuraVolume : 0.20);
+  const [tanpuraVolume, setTanpuraVolume] = useState(savedPrefs.tanpuraVolume !== undefined ? savedPrefs.tanpuraVolume : 0.12);
   const [tanpuraMode, setTanpuraMode] = useState<'Pa' | 'Ma'>(savedPrefs.tanpuraMode || 'Pa');
   const [selectedCategory, setSelectedCategory] = useState<string>(savedPrefs.selectedCategory || '1. Basic Alankars');
   const [enableGlide, setEnableGlide] = useState(savedPrefs.enableGlide || false);
